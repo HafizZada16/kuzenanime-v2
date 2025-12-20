@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8083:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - kanata-network
+
+networks:
+  kanata-network:
+    driver: bridge
