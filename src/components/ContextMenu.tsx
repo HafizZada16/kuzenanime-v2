@@ -27,7 +27,7 @@ const ContextMenu = () => {
         orientation: undefined
       };
       const threshold = 160;
-      
+
       const emitEvent = (isOpen: boolean) => {
         if (isOpen) setIsDevToolsOpen(true);
       };
@@ -41,7 +41,7 @@ const ContextMenu = () => {
           return 'devtools';
         }
       });
-      
+
       // Periodically log the element to trigger the getter if console is open
       console.log(element);
       console.clear();
@@ -49,30 +49,30 @@ const ContextMenu = () => {
 
     // 3. More aggressive detection for mobile/Kiwi
     const detectViaPerformance = () => {
-        // High frequency check for debugger lag
-        setInterval(() => {
-            const t1 = performance.now();
-            // eslint-disable-next-line no-debugger
-            debugger;
-            const t2 = performance.now();
-            if (t2 - t1 > 100) {
-                setIsDevToolsOpen(true);
-            }
-        }, 500);
+      // High frequency check for debugger lag
+      setInterval(() => {
+        const t1 = performance.now();
+        // eslint-disable-next-line no-debugger
+        debugger;
+        const t2 = performance.now();
+        if (t2 - t1 > 100) {
+          setIsDevToolsOpen(true);
+        }
+      }, 500);
     };
 
     // 4. Block Eruda (Mobile DevTools)
     const detectEruda = () => {
-        // Check for Eruda global or container
-        if ((window as any).eruda || document.getElementById('eruda')) {
-            setIsDevToolsOpen(true);
-            // Try to destroy/remove eruda if possible
-            if ((window as any).eruda) {
-                try {
-                    (window as any).eruda.destroy();
-                } catch(e) {}
-            }
+      // Check for Eruda global or container
+      if ((window as any).eruda || document.getElementById('eruda')) {
+        setIsDevToolsOpen(true);
+        // Try to destroy/remove eruda if possible
+        if ((window as any).eruda) {
+          try {
+            (window as any).eruda.destroy();
+          } catch (e) { }
         }
+      }
     };
 
     // 5. Detection via window size/orientation threshold
@@ -80,7 +80,7 @@ const ContextMenu = () => {
       const threshold = 160;
       const widthThreshold = window.outerWidth - window.innerWidth > threshold;
       const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-      
+
       if (widthThreshold || heightThreshold) {
         setIsDevToolsOpen(true);
       }
@@ -92,13 +92,13 @@ const ContextMenu = () => {
       detectViaConsole();
       detectEruda();
     }, 1000);
-    
+
     detectViaPerformance();
 
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       setVisible(true);
-      
+
       const menuWidth = 200;
       const menuHeight = 250;
       let x = e.clientX;
@@ -111,7 +111,7 @@ const ContextMenu = () => {
     };
 
     const handleClick = () => setVisible(false);
-    
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         e.key === 'F12' ||
@@ -148,7 +148,7 @@ const ContextMenu = () => {
       <div className="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-8 overflow-hidden">
         <div className="max-w-2xl w-full bg-[#FF3B30] border-8 border-black p-10 shadow-[20px_20px_0px_0px_#FFCC00] transform -rotate-2 text-center">
           <h1 className="text-6xl md:text-8xl font-black oswald text-white mb-6 uppercase leading-none italic">
-            ACCESS<br/>DENIED
+            ACCESS<br />DENIED
           </h1>
           <div className="bg-white border-4 border-black p-4 mb-8 transform rotate-1">
             <p className="text-black font-black oswald text-xl md:text-2xl uppercase">
@@ -156,15 +156,15 @@ const ContextMenu = () => {
             </p>
           </div>
           <div className="flex justify-center gap-4">
-             <div className="animate-bounce bg-black text-[#FFCC00] px-6 py-2 border-4 border-white font-black oswald text-lg">
-               SYSTEM LOCKED
-             </div>
-             <button
-               onClick={handleExit}
-               className="bg-white text-black px-6 py-2 border-4 border-black font-black oswald text-lg hover:bg-gray-200 transition-colors"
-             >
-               EXIT
-             </button>
+            <div className="animate-bounce bg-black text-[#FFCC00] px-6 py-2 border-4 border-white font-black oswald text-lg">
+              SYSTEM LOCKED
+            </div>
+            <button
+              onClick={handleExit}
+              className="bg-white text-black px-6 py-2 border-4 border-black font-black oswald text-lg hover:bg-gray-200 transition-colors"
+            >
+              EXIT
+            </button>
           </div>
         </div>
         {/* Background decorative elements */}
@@ -184,7 +184,7 @@ const ContextMenu = () => {
   ];
 
   return (
-    <div 
+    <div
       ref={menuRef}
       className="fixed z-[300] bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-48 oswald font-black"
       style={{ top: position.y, left: position.x }}

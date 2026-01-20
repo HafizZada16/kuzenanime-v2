@@ -44,6 +44,7 @@ const Navbar = () => {
             { name: 'list', path: '/list' },
             { name: 'ongoing', path: '/ongoing' },
             { name: 'complete', path: '/complete' },
+            { name: 'schedule', path: '/schedule' },
             { name: 'genre', path: '/genre' },
           ].map((item) => (
             <Link 

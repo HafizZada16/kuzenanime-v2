@@ -1,23 +1,37 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --neo-yellow: #F4D738;
+    --neo-purple: #A388EE;
+    --neo-mint: #2AD184;
+    --neo-coral: #FF5C5C;
+    --neo-white: #F0F0F0;
+  }
+
   body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Macondo', sans-serif;
     background-color: #0c0c0c;
     background-image: 
-      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      radial-gradient(circle at 15% 50%, rgba(255, 204, 0, 0.15), transparent 25%), 
-      radial-gradient(circle at 85% 30%, rgba(255, 59, 48, 0.15), transparent 25%), 
-      radial-gradient(circle at 50% 80%, rgba(0, 122, 255, 0.15), transparent 25%);
-    background-size: 50px 50px, 50px 50px, 100vw 100vh, 100vw 100vh, 100vw 100vh;
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      radial-gradient(circle at 15% 50%, rgba(163, 136, 238, 0.1), transparent 25%), 
+      radial-gradient(circle at 85% 30%, rgba(244, 215, 56, 0.1), transparent 25%), 
+      radial-gradient(circle at 50% 80%, rgba(42, 209, 132, 0.1), transparent 25%);
+    background-size: 60px 60px, 60px 60px, 100vw 100vh, 100vw 100vh, 100vw 100vh;
     background-attachment: fixed;
     color: white;
+    -webkit-font-smoothing: antialiased;
   }
   
-  h1, h2, h3, .oswald {
-    font-family: 'Oswald', sans-serif;
+  h1, h2, h3, .heading-font {
+    font-family: 'Share Tech', cursive;
     text-transform: uppercase;
+    /* line-height: 1.2; */
+  }
+
+  .mono {
+    font-family: 'Space Mono', monospace;
   }
 
   * {
@@ -34,6 +48,54 @@
 }
 
 @layer components {
+  .animate-reveal {
+    animation: reveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes peek-in {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, 100%) scale(0.9);
+    }
+    70% {
+      opacity: 1;
+      transform: translate(-50%, -55%) scale(1.05);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  .animate-peek {
+    animation: peek-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
   .neo-shadow {
     box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
   }
@@ -53,5 +115,14 @@
     color: black;
     border: 3px solid black;
     box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+  }
+
+  /* Custom Range Input */
+  input[type="range"]::-webkit-slider-thumb {
+    @apply appearance-none w-4 h-4 bg-black border-2 border-white cursor-pointer;
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    @apply w-4 h-4 bg-black border-2 border-white cursor-pointer;
   }
 }

@@ -31,15 +31,6 @@ const BottomNav = () => {
       )
     },
     { 
-      name: 'Complete', 
-      path: '/complete', 
-      icon: (
-        <svg className="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m5 12 4.7 4.5 9.3-9"/>
-        </svg>
-      )
-    },
-    { 
       name: 'List', 
       path: '/list', 
       icon: (
@@ -79,22 +70,22 @@ const BottomNav = () => {
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 z-[100] w-full h-16 bg-white border-t-8 border-black shadow-[0_-4px_0_0_rgba(0,0,0,1)]">
-      <div className="grid h-full grid-cols-6 mx-auto font-black oswald">
+    <div className="lg:hidden fixed bottom-0 left-0 z-[2100] w-full h-16 bg-white border-t-8 border-black shadow-[0_-4px_0_0_rgba(0,0,0,1)]">
+      <div className="grid h-full grid-cols-6 mx-auto font-normal heading-font tracking-tighter">
         {navItems.map((item) => (
           <Link
             key={item.name}
             to={item.path}
-            className={`inline-flex flex-col items-center justify-center px-5 transition-all ${
+            className={`inline-flex flex-col items-center justify-center transition-all ${
               isActive(item.path)
-                ? 'bg-[#FF3B30] text-white'
-                : 'text-black hover:bg-[#FFCC00]'
+                ? 'bg-[var(--neo-coral)] text-white'
+                : 'text-black hover:bg-[var(--neo-yellow)]'
             }`}
           >
-            <div className={`mb-1 transition-transform ${isActive(item.path) ? 'scale-110' : ''}`}>
+            <div className={`mb-0.5 transition-transform ${isActive(item.path) ? 'scale-110' : ''}`}>
               {item.icon}
             </div>
-            <span className="text-[10px] uppercase tracking-tighter">{item.name}</span>
+            <span className="text-[9px] uppercase">{item.name}</span>
           </Link>
         ))}
       </div>

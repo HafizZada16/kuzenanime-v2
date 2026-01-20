@@ -17,6 +17,7 @@
     "@hono/node-server": "^1.19.9",
     "@tailwindcss/vite": "^4.1.18",
     "dotenv": "^17.2.3",
+    "hls.js": "^1.6.15",
     "hono": "^4.11.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
