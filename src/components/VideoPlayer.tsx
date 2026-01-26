@@ -27,6 +27,7 @@ interface VideoPlayerProps {
   qualities?: StreamData[];
   currentQuality?: string;
   onQualityChange?: (stream: StreamData) => void;
+  episodeId?: string;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -35,7 +36,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onEnded,
   qualities = [],
   currentQuality,
-  onQualityChange
+  onQualityChange,
+  episodeId
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -53,6 +55,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const lastTimeRef = useRef(0);
   const wasPlayingRef = useRef(false);
   const isSwitchingSource = useRef(false);
+  const lastEpisodeIdRef = useRef(episodeId);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -105,11 +108,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!src) return;
     setHasError(false);
 
-    // Save current state before switching
-    if (videoRef.current && videoRef.current.currentTime > 0) {
+    const isEpisodeChange = lastEpisodeIdRef.current !== episodeId;
+    lastEpisodeIdRef.current = episodeId;
+
+    // Save current state before switching (only if it's NOT an episode change, i.e., it's a quality change)
+    if (!isEpisodeChange && videoRef.current && videoRef.current.currentTime > 0) {
       lastTimeRef.current = videoRef.current.currentTime;
       wasPlayingRef.current = !videoRef.current.paused;
       isSwitchingSource.current = true;
+    } else {
+      // Reset for new episode
+      lastTimeRef.current = 0;
+      isSwitchingSource.current = false;
+      if (isEpisodeChange) setProgress(0);
     }
 
     const isHls = src.includes('.m3u8');
@@ -145,7 +156,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     } else {
       setUseIframe(true);
     }
-  }, [src]);
+  }, [src, episodeId]);
 
   const handleLoadedMetadata = () => {
     if (videoRef.current && isSwitchingSource.current) {
@@ -190,15 +201,68 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
-  const toggleFullscreen = () => {
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFull = !!document.fullscreenElement;
+      setIsFullscreen(isFull);
+      if (!isFull && screen.orientation && screen.orientation.unlock) {
+        try {
+          screen.orientation.unlock();
+        } catch (e) {
+          // Ignore unlock errors
+        }
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = async () => {
     if (!containerRef.current) return;
 
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
+    try {
+      if (!document.fullscreenElement) {
+        if (containerRef.current.requestFullscreen) {
+          await containerRef.current.requestFullscreen();
+        } else if ((containerRef.current as any).webkitRequestFullscreen) {
+          await (containerRef.current as any).webkitRequestFullscreen();
+        } else if ((containerRef.current as any).mozRequestFullScreen) {
+          await (containerRef.current as any).mozRequestFullScreen();
+        } else if ((containerRef.current as any).msRequestFullscreen) {
+          await (containerRef.current as any).msRequestFullscreen();
+        }
+        
+        // Force landscape on mobile if supported
+        if (screen.orientation && (screen.orientation as any).lock) {
+          try {
+            await (screen.orientation as any).lock('landscape');
+          } catch (err) {
+            console.log("Orientation lock failed:", err);
+          }
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        } else if ((document as any).mozCancelFullScreen) {
+          await (document as any).mozCancelFullScreen();
+        } else if ((document as any).msExitFullscreen) {
+          await (document as any).msExitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.error("Fullscreen error:", err);
     }
   };
 
@@ -208,7 +272,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
-  const handleMouseMove = () => {
+  const showControlsWithTimeout = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     controlsTimeoutRef.current = setTimeout(() => {
@@ -234,14 +298,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full bg-black group overflow-hidden flex items-center justify-center"
-      onMouseMove={handleMouseMove}
+      className={`relative w-full h-full bg-black group overflow-hidden flex items-center justify-center ${!showControls && isPlaying ? 'cursor-none' : ''}`}
+      onMouseMove={showControlsWithTimeout}
+      onTouchStart={showControlsWithTimeout}
+      onClick={showControlsWithTimeout}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
       <video
         ref={videoRef}
         className="w-full h-full"
-        onClick={togglePlay}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onPlay={() => setIsPlaying(true)}
@@ -404,15 +469,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Big Play Button on Hover/Pause */}
-      {(!isPlaying || showControls) && (
-        <button 
-          onClick={togglePlay}
-          className="absolute z-20 w-20 h-20 bg-[var(--neo-yellow)] border-4 border-black shadow-[8px_8px_0px_0px_black] rounded-none flex items-center justify-center text-black hover:scale-110 active:scale-95 transition-all"
-        >
-          <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} size="2x" className={isPlaying ? "" : "ml-2"} />
-        </button>
-      )}
     </div>
   );
 };

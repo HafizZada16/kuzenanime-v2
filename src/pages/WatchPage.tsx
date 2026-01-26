@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import Loader from '../components/Loader';
@@ -7,6 +7,7 @@ import VideoPlayer from '../components/VideoPlayer';
 import { DetailedAnime } from '../types';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
 import { authenticatedFetch } from '../utils/api';
+import { sortEpisodes } from '../utils/episode';
 
 interface StreamData {
   id: string;
@@ -24,6 +25,13 @@ const WatchPage = () => {
   const [loading, setLoading] = useState(true);
   const [fetchingEpisode, setFetchingEpisode] = useState(false);
   const [currentStream, setCurrentStream] = useState<StreamData | null>(null);
+  const activeEpisodeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (activeEpisodeRef.current) {
+      activeEpisodeRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [episodeSlug, animeDetail]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -31,7 +39,15 @@ const WatchPage = () => {
       
       // If we already have anime detail, we're just switching episodes
       if (animeDetail) {
-        setFetchingEpisode(true);
+        if (animeDetail.id !== slug) {
+          // Different anime, reset everything
+          setAnimeDetail(null);
+          setLoading(true);
+        } else {
+          setFetchingEpisode(true);
+        }
+        setStreams([]);
+        setCurrentStream(null);
       } else {
         setLoading(true);
       }
@@ -79,12 +95,12 @@ const WatchPage = () => {
                 duration: d.duration,
                 aired: d.release_date ? new Date(d.release_date).toLocaleDateString() : 'N/A',
               },
-              episodes: d.episodes?.map((ep: any) => ({
+              episodes: sortEpisodes(d.episodes?.map((ep: any) => ({
                 title: ep.title_indonesian || `Episode ${ep.number}`,
                 episode: ep.number?.toString(),
                 date: ep.date_created ? new Date(ep.date_created).toLocaleDateString() : 'Recently',
                 slug: ep.id
-              })) || [],
+              })) || [], 'oldest'),
             };
             setAnimeDetail(detailed);
           }
@@ -104,7 +120,7 @@ const WatchPage = () => {
   const getAdjacentEpisodes = () => {
     if (!animeDetail || !animeDetail.episodes || !episodeSlug) return { prev: null, next: null };
     
-    const list = [...animeDetail.episodes].reverse();
+    const list = animeDetail.episodes; // Already sorted oldest first
     const currentIndex = list.findIndex(ep => ep.slug === episodeSlug);
     
     if (currentIndex === -1) return { prev: null, next: null };
@@ -131,6 +147,7 @@ const WatchPage = () => {
             <div className="relative">
               <div className="aspect-video bg-black border-8 border-black shadow-[16px_16px_0px_0px_var(--neo-coral)] relative overflow-hidden z-10 group">
                 <VideoPlayer 
+                  episodeId={episodeSlug}
                   src={currentStream?.streaming_url} 
                   title={animeDetail?.title}
                   qualities={streams}
@@ -233,12 +250,13 @@ const WatchPage = () => {
                     {animeDetail?.episodes?.map((ep, idx) => (
                     <button
                         key={idx}
+                        ref={ep.slug === episodeSlug ? activeEpisodeRef : null}
                         onClick={() => navigate(`/watch/${slug}/${ep.slug}`)}
                         className={`w-full text-left p-4 border-b-4 border-black font-normal heading-font text-[10px] uppercase flex items-center gap-4 transition-colors tracking-tighter ${
                         ep.slug === episodeSlug ? 'bg-[var(--neo-coral)] text-white' : 'text-black hover:bg-[var(--neo-yellow)]'
                         }`}
                     >
-                        <span className="w-8 h-8 flex items-center justify-center border-2 border-current italic bg-black/10">{ep.episode}</span>
+                        <span className="w-10 h-10 shrink-0 flex items-center justify-center border-2 border-current italic bg-black/10 text-xs">{ep.episode}</span>
                         <span className="truncate">{ep.title}</span>
                     </button>
                     ))}

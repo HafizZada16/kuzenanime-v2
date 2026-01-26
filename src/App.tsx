@@ -22,6 +22,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import SocialMediaPopup from './components/SocialMediaPopup';
 // import ContextMenu from './components/ContextMenu';
 import FavoritesPage from './pages/FavoritesPage';
+import AuthorPage from './pages/AuthorPage';
 import { API_BASE_URL, ANIMEPLAY_API_BASE_URL } from './constants';
 import { authenticatedFetch } from './utils/api';
 
@@ -101,6 +102,7 @@ export default function App() {
           <Route path="/genre" element={<GenrePage />} />
           <Route path="/genre/:genreId" element={<GenreDetailPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/author" element={<AuthorPage />} />
           <Route path="/search/:query" element={<SearchPage />} />
           <Route path="/detail/:slug" element={<AnimeDetail />} />
           <Route path="/watch/:slug/:episodeSlug" element={<WatchPage />} />
@@ -126,6 +128,7 @@ export default function App() {
             <ul className="space-y-2 font-bold uppercase text-sm">
               <li><Link to="/" className="hover:text-[#FF3B30] cursor-pointer">Home</Link></li>
               <li><Link to="/movies" className="hover:text-[#FF3B30] cursor-pointer">Movies</Link></li>
+              <li><Link to="/author" className="hover:text-[#FF3B30] cursor-pointer">Meet the Team</Link></li>
               <li className="hover:text-[#FF3B30] cursor-pointer">Discord</li>
             </ul>
           </div>

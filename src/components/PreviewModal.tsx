@@ -4,6 +4,7 @@ import Badge from './Badge';
 import { Anime, DetailedAnime } from '../types';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
 import { authenticatedFetch } from '../utils/api';
+import { sortEpisodes } from '../utils/episode';
 
 interface PreviewModalProps {
   anime: Anime | null;
@@ -46,7 +47,12 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ anime, onClose }) => {
               duration: d.duration,
               aired: d.release_date ? new Date(d.release_date).toLocaleDateString() : 'N/A',
             },
-            episodes: [],
+            episodes: sortEpisodes(d.episodes?.map((ep: any) => ({
+              title: ep.title_indonesian || `Episode ${ep.number}`,
+              episode: ep.number?.toString(),
+              date: ep.date_created ? new Date(ep.date_created).toLocaleDateString() : 'Recently',
+              slug: ep.id
+            })) || [], 'oldest'),
           };
           setDetailedData(detailed);
         }

@@ -7,6 +7,7 @@ import Badge from '../components/Badge';
 import { useFavorites } from '../hooks/useFavorites';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
 import { authenticatedFetch } from '../utils/api';
+import { sortEpisodes } from '../utils/episode';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faPlay, faBookmark, faInfoCircle, faCalendar, faFilm, faUsers, faLayerGroup, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 
@@ -25,6 +26,7 @@ const AnimeDetail = () => {
   useEffect(() => {
     const fetchDetail = async () => {
       if (!slug) return;
+      setAnime(null);
       setLoading(true);
       try {
         const res = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/detail/${slug}`);
@@ -85,16 +87,13 @@ const AnimeDetail = () => {
       navigate(`/watch/${slug}/${epSlug}`);
   };
 
-  const filteredEpisodes = (anime.episodes || [])
-    .filter(ep => 
+  const filteredEpisodes = sortEpisodes(
+    (anime.episodes || []).filter(ep => 
       ep.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
       ep.episode.includes(searchQuery)
-    )
-    .sort((a, b) => {
-      const numA = parseInt(a.episode) || 0;
-      const numB = parseInt(b.episode) || 0;
-      return sortOrder === 'newest' ? numB - numA : numA - numB;
-    });
+    ),
+    sortOrder
+  );
 
   return (
     <div className="min-h-screen bg-[#0c0c0c] pb-20">
