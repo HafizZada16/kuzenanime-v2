@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWhatsapp, faInstagram, faFacebook, faGithub, faThreads } from '@fortawesome/free-brands-svg-icons';
-import Button from './Button';
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
 const SocialMediaPopup = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -29,75 +29,76 @@ const SocialMediaPopup = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center px-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+        className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300 animate-reveal"
         onClick={handleClose}
       ></div>
 
       {/* Modal Content */}
-      <div className="relative bg-[#FFCC00] border-8 border-black p-6 md:p-10 max-w-lg w-full shadow-[16px_16px_0px_0px_#FF3B30] transform rotate-1 animate-in zoom-in-95 duration-300">
+      <div className="relative bg-[#161618] border border-white/10 p-8 md:p-12 max-w-lg w-full rounded-[2rem] shadow-2xl overflow-hidden animate-reveal">
+        {/* Abstract Background Glow */}
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--primary)]/10 rounded-full blur-[100px]"></div>
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-[var(--primary)]/10 rounded-full blur-[100px]"></div>
 
-        {/* Decorative Header */}
-        <div className="absolute -top-6 -left-6 bg-white border-4 border-black px-4 py-2 transform -rotate-3 shadow-[4px_4px_0px_0px_black] z-10">
-          <span className="font-black text-black oswald text-xl">NOTICE!</span>
-        </div>
+        <div className="relative z-10 space-y-8 text-center">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full text-[10px] font-bold uppercase tracking-widest border border-[var(--primary)]/20">
+              <span className="w-1.5 h-1.5 bg-[var(--primary)] rounded-full animate-pulse"></span>
+              Social Update
+            </div>
+            <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+              Join The <span className="text-[var(--primary)]">Squad</span>
+            </h2>
+            <p className="text-white/40 text-sm md:text-base leading-relaxed max-w-xs mx-auto">
+              Ikuti kami untuk update anime terbaru dan informasi server tercepat.
+            </p>
+          </div>
 
-        <div className="space-y-6 text-center">
-          <h2 className="text-4xl md:text-5xl font-black oswald uppercase leading-[0.9]">
-            Join The<br />
-            <span className="text-white text-stroke-black">Squad</span>
-          </h2>
-
-          <p className="font-bold text-black border-4 border-black bg-white p-4 text-sm md:text-base transform -rotate-1 shadow-[4px_4px_0px_0px_black]">
-            Don't miss out on updates! Follow our social media channels to stay ahead of the update.
-          </p>
-
-          <div className="flex justify-center text-black gap-3 flex-wrap py-4">
+          <div className="flex justify-center gap-4 flex-wrap">
             {[
-              { icon: faWhatsapp, href: "https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m", color: "bg-[#25D366]" },
-              { icon: faInstagram, href: "https://instagram.com/kang.potokopi", color: "bg-[#E4405F]" },
-              { icon: faFacebook, href: "https://facebook.com/kang.potokopi", color: "bg-[#1877F2]" },
-              { icon: faGithub, href: "https://github.com/idlanyor", color: "bg-[#333]" },
-              { icon: faThreads, href: "https://threads.net/kang.potokopi", color: "bg-[#000]" }
+              { icon: faWhatsapp, href: "https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m", label: "WhatsApp" },
+              { icon: faInstagram, href: "https://instagram.com/kang.potokopi", label: "Instagram" },
+              { icon: faFacebook, href: "https://facebook.com/kang.potokopi", label: "Facebook" },
+              { icon: faGithub, href: "https://github.com/idlanyor", label: "GitHub" },
+              { icon: faThreads, href: "https://threads.net/kang.potokopi", label: "Threads" }
             ].map((social, idx) => (
               <a
                 key={idx}
                 href={social.href}
                 target="_blank"
                 rel="noreferrer"
-                className={`w-12 h-12 bg-white border-4 border-black flex items-center justify-center text-2xl transition-all shadow-[4px_4px_0px_0px_black] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_black] ${social.color}`}
+                className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl text-white/60 hover:bg-[var(--primary)] hover:text-white transition-all duration-300 hover:scale-110 shadow-lg"
+                title={social.label}
               >
                 <FontAwesomeIcon icon={social.icon} />
               </a>
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-            <Button
-              variant="black"
+          <div className="grid grid-cols-1 gap-3 pt-4">
+            <button
               onClick={handleClose}
-              className="w-full text-lg"
+              className="iq-btn-primary w-full py-3.5 text-sm"
             >
-              OK, COOL
-            </Button>
-            <Button
-              variant="white"
+              Siap, Lanjutkan!
+            </button>
+            <button
               onClick={handleDontShowAgain}
-              className="w-full text-xs md:text-sm"
+              className="text-white/20 hover:text-white/40 text-[10px] font-bold uppercase tracking-widest transition-colors py-2"
             >
-              DON'T SHOW AGAIN
-            </Button>
+              Jangan tampilkan lagi
+            </button>
           </div>
         </div>
 
-        {/* Close X Button top right */}
+        {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 w-10 h-10 bg-[#FF3B30] border-4 border-black text-white font-black hover:scale-110 transition-transform shadow-[2px_2px_0px_0px_black]"
+          className="absolute top-6 right-6 p-2 text-white/20 hover:text-white transition-colors"
         >
-          X
+          <FontAwesomeIcon icon={faXmark} />
         </button>
       </div>
     </div>

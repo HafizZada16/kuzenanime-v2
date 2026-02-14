@@ -44,6 +44,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [useIframe, setUseIframe] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -59,7 +61,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in an input (though unlikely here)
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
       switch(e.key.toLowerCase()) {
@@ -94,9 +95,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           setVolume(volDown);
           if (videoRef.current) videoRef.current.volume = volDown;
           break;
-        case '?':
-          setShowShortcutInfo(prev => !prev);
-          break;
       }
     };
 
@@ -111,16 +109,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const isEpisodeChange = lastEpisodeIdRef.current !== episodeId;
     lastEpisodeIdRef.current = episodeId;
 
-    // Save current state before switching (only if it's NOT an episode change, i.e., it's a quality change)
     if (!isEpisodeChange && videoRef.current && videoRef.current.currentTime > 0) {
       lastTimeRef.current = videoRef.current.currentTime;
       wasPlayingRef.current = !videoRef.current.paused;
       isSwitchingSource.current = true;
     } else {
-      // Reset for new episode
       lastTimeRef.current = 0;
       isSwitchingSource.current = false;
-      if (isEpisodeChange) setProgress(0);
+      if (isEpisodeChange) {
+        setProgress(0);
+        setCurrentTime(0);
+      }
     }
 
     const isHls = src.includes('.m3u8');
@@ -159,16 +158,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   }, [src, episodeId]);
 
   const handleLoadedMetadata = () => {
-    if (videoRef.current && isSwitchingSource.current) {
-      videoRef.current.currentTime = lastTimeRef.current;
-      if (wasPlayingRef.current) {
-        videoRef.current.play().catch(e => console.log("Autoplay blocked", e));
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+      if (isSwitchingSource.current) {
+        videoRef.current.currentTime = lastTimeRef.current;
+        if (wasPlayingRef.current) {
+          videoRef.current.play().catch(e => console.log("Autoplay blocked", e));
+        }
+        isSwitchingSource.current = false;
       }
-      isSwitchingSource.current = false;
     }
   };
 
-  // Video Events
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) videoRef.current.pause();
@@ -179,8 +180,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const handleTimeUpdate = () => {
     if (videoRef.current && isFinite(videoRef.current.duration) && videoRef.current.duration > 0) {
-      const progress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
-      setProgress(progress);
+      const prog = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      setProgress(prog);
+      setCurrentTime(videoRef.current.currentTime);
     }
   };
 
@@ -201,65 +203,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isFull = !!document.fullscreenElement;
-      setIsFullscreen(isFull);
-      if (!isFull && screen.orientation && screen.orientation.unlock) {
-        try {
-          screen.orientation.unlock();
-        } catch (e) {
-          // Ignore unlock errors
-        }
-      }
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
-    };
-  }, []);
-
   const toggleFullscreen = async () => {
     if (!containerRef.current) return;
-
     try {
       if (!document.fullscreenElement) {
-        if (containerRef.current.requestFullscreen) {
-          await containerRef.current.requestFullscreen();
-        } else if ((containerRef.current as any).webkitRequestFullscreen) {
-          await (containerRef.current as any).webkitRequestFullscreen();
-        } else if ((containerRef.current as any).mozRequestFullScreen) {
-          await (containerRef.current as any).mozRequestFullScreen();
-        } else if ((containerRef.current as any).msRequestFullscreen) {
-          await (containerRef.current as any).msRequestFullscreen();
-        }
-        
-        // Force landscape on mobile if supported
-        if (screen.orientation && (screen.orientation as any).lock) {
-          try {
-            await (screen.orientation as any).lock('landscape');
-          } catch (err) {
-            console.log("Orientation lock failed:", err);
-          }
-        }
+        if (containerRef.current.requestFullscreen) await containerRef.current.requestFullscreen();
+        else if ((containerRef.current as any).webkitRequestFullscreen) await (containerRef.current as any).webkitRequestFullscreen();
       } else {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-          await (document as any).webkitExitFullscreen();
-        } else if ((document as any).mozCancelFullScreen) {
-          await (document as any).mozCancelFullScreen();
-        } else if ((document as any).msExitFullscreen) {
-          await (document as any).msExitFullscreen();
-        }
+        if (document.exitFullscreen) await document.exitFullscreen();
       }
     } catch (err) {
       console.error("Fullscreen error:", err);
@@ -267,9 +218,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const skip = (seconds: number) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime += seconds;
-    }
+    if (videoRef.current) videoRef.current.currentTime += seconds;
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const showControlsWithTimeout = () => {
@@ -280,17 +235,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, 3000);
   };
 
-  if (!src) return <div className="w-full h-full bg-black flex items-center justify-center text-white font-black oswald">NO SIGNAL</div>;
+  if (!src) return <div className="w-full h-full bg-black flex items-center justify-center text-white/20 font-bold">NO SIGNAL</div>;
 
   if (useIframe || hasError) {
     return (
-      <iframe
-        src={src}
-        className="w-full h-full relative z-10"
-        allowFullScreen
-        title={title}
-        frameBorder="0"
+      <iframe 
+        src={src} 
+        className="w-full h-full rounded-2xl" 
+        allowFullScreen 
+        title={title} 
+        frameBorder="0" 
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
       ></iframe>
     );
   }
@@ -298,11 +254,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={`relative w-full h-full bg-black group overflow-hidden flex items-center justify-center ${!showControls && isPlaying ? 'cursor-none' : ''}`}
+      className={`relative w-full h-full bg-black group overflow-hidden flex items-center justify-center rounded-2xl ${!showControls && isPlaying ? 'cursor-none' : ''}`}
       onMouseMove={showControlsWithTimeout}
       onTouchStart={showControlsWithTimeout}
       onClick={showControlsWithTimeout}
-      onMouseLeave={() => isPlaying && setShowControls(false)}
     >
       <video
         ref={videoRef}
@@ -316,159 +271,78 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         playsInline
       />
 
-      {/* Custom Controls Overlay */}
-      <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 md:p-6 transition-transform duration-300 z-30 ${showControls ? 'translate-y-0' : 'translate-y-full'}`}>
+      {/* Center Play Button (Large) */}
+      <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${!isPlaying || showControls ? 'opacity-100' : 'opacity-0'}`}>
+        <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="w-16 h-16 md:w-20 md:h-20 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white pointer-events-auto hover:bg-[var(--primary)] hover:scale-110 transition-all">
+          <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} size="2x" className={!isPlaying ? "ml-1" : ""} />
+        </button>
+      </div>
+
+      {/* Modern Controls Overlay */}
+      <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent px-4 md:px-8 pb-4 md:pb-6 transition-all duration-500 z-30 ${showControls ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
         
-        {/* Progress Bar - Thicker on mobile for easier touch */}
-        <div className="relative w-full h-8 mb-2 md:mb-4 flex items-center group/progress">
+        {/* Progress Bar Container */}
+        <div className="relative w-full group/progress mb-4">
+          <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-1 bg-white/20 rounded-full overflow-hidden">
+             <div className="h-full bg-[var(--primary)] transition-all duration-100" style={{ width: `${progress}%` }}></div>
+          </div>
           <input
             type="range"
             min="0"
             max="100"
             value={progress || 0}
             onChange={handleProgressChange}
-            className="absolute w-full h-2 md:h-2 bg-gray-700 appearance-none cursor-pointer outline-none border-2 border-black accent-[var(--neo-yellow)]"
-            style={{
-              background: `linear-gradient(to right, var(--neo-yellow) ${progress}%, #374151 ${progress}%)`
-            }}
+            className="relative w-full h-4 bg-transparent appearance-none cursor-pointer outline-none opacity-0 group-hover/progress:opacity-100 transition-opacity accent-[var(--primary)]"
           />
         </div>
 
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3 md:gap-6">
-            <button onClick={togglePlay} className="text-[var(--neo-yellow)] hover:scale-110 transition-transform cursor-pointer p-1">
-              <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} size={window.innerWidth < 768 ? "sm" : "lg"} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 md:gap-6">
+            <button onClick={togglePlay} className="text-white hover:text-[var(--primary)] transition-colors">
+              <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} size="lg" />
             </button>
             
-            <div className="flex items-center gap-2 md:gap-4">
-               <button onClick={() => skip(-10)} className="text-white hover:text-[var(--neo-yellow)] transition-colors cursor-pointer p-1">
-                 <FontAwesomeIcon icon={faBackward} size="sm" />
-               </button>
-               <button onClick={() => skip(10)} className="text-white hover:text-[var(--neo-yellow)] transition-colors cursor-pointer p-1">
-                 <FontAwesomeIcon icon={faForward} size="sm" />
-               </button>
+            <div className="flex items-center gap-4">
+               <button onClick={() => skip(-10)} className="text-white/80 hover:text-white transition-colors"><FontAwesomeIcon icon={faBackward} /></button>
+               <button onClick={() => skip(10)} className="text-white/80 hover:text-white transition-colors"><FontAwesomeIcon icon={faForward} /></button>
             </div>
 
-            <div className="hidden sm:flex items-center gap-3">
-              <button onClick={toggleMute} className="text-white cursor-pointer">
-                <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} />
-              </button>
-              <input 
-                type="range" 
-                min="0" 
-                max="1" 
-                step="0.1" 
-                value={isMuted ? 0 : volume}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setVolume(val);
-                  if (videoRef.current) videoRef.current.volume = val;
-                  setIsMuted(val === 0);
-                }}
-                className="w-16 md:w-20 h-1 bg-gray-600 appearance-none accent-white cursor-pointer"
-              />
+            <div className="hidden sm:flex items-center gap-3 group/volume">
+              <button onClick={toggleMute} className="text-white/80 hover:text-white"><FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} /></button>
+              <input type="range" min="0" max="1" step="0.1" value={isMuted ? 0 : volume} onChange={(e) => { const val = Number(e.target.value); setVolume(val); if (videoRef.current) videoRef.current.volume = val; setIsMuted(val === 0); }} className="w-0 group-hover/volume:w-20 transition-all duration-300 h-1 bg-white/20 appearance-none rounded-full accent-white" />
             </div>
+
+            <span className="text-white/60 font-medium text-xs md:text-sm tabular-nums">
+              {formatTime(currentTime)} <span className="mx-1">/</span> {formatTime(duration)}
+            </span>
           </div>
 
-          <div className="flex items-center gap-3 md:gap-6">
-            <span className="text-white mono text-[9px] md:text-xs font-bold bg-black/50 px-2 py-1 border border-white/20 whitespace-nowrap">
-              {videoRef.current ? 
-                `${Math.floor(videoRef.current.currentTime / 60)}:${Math.floor(videoRef.current.currentTime % 60).toString().padStart(2, '0')}` : 
-                '0:00'
-              } <span className="hidden xs:inline">/ {videoRef.current ? 
-                `${Math.floor(videoRef.current.duration / 60)}:${Math.floor(videoRef.current.duration % 60).toString().padStart(2, '0')}` : 
-                '0:00'
-              }</span>
-            </span>
-            
-            <div className="flex items-center gap-2">
-               {/* Quality Selector */}
-               <div className="relative">
-                 <button 
-                   onClick={() => setShowQualityMenu(!showQualityMenu)}
-                   className="bg-black text-white border-2 border-white px-2 py-0.5 mono text-[9px] md:text-[10px] font-bold hover:bg-[var(--neo-yellow)] hover:text-black transition-all cursor-pointer"
-                 >
-                   {currentQuality || 'AUTO'}
-                 </button>
-                 
-                 {showQualityMenu && qualities.length > 0 && (
-                   <div className="absolute bottom-full right-0 mb-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_black] min-w-[100px] md:min-w-[120px] overflow-hidden">
-                     <div className="bg-black text-white px-3 py-1 text-[8px] md:text-[9px] heading-font italic">SELECT_RES</div>
-                     {qualities.map((q) => (
-                       <button
-                         key={q.id}
-                         onClick={() => {
-                           if (onQualityChange) onQualityChange(q);
-                           setShowQualityMenu(false);
-                         }}
-                         className={`w-full text-left px-3 py-2 text-[9px] md:text-[10px] mono font-bold border-b-2 border-black last:border-0 transition-colors hover:bg-[var(--neo-yellow)] ${
-                           currentQuality === q.quality ? 'bg-[var(--neo-coral)] text-white' : 'bg-white text-black'
-                         }`}
-                       >
-                         {q.quality}
-                       </button>
-                     ))}
-                   </div>
-                 )}
-               </div>
-
-               <button onClick={toggleFullscreen} className="text-white hover:text-[var(--neo-yellow)] transition-colors cursor-pointer p-1">
-                 <FontAwesomeIcon icon={isFullscreen ? faCompress : faExpand} size="sm" />
-               </button>
-               
-               <button 
-                 onClick={() => setShowShortcutInfo(!showShortcutInfo)}
-                 className="hidden md:flex w-6 h-6 rounded-full border-2 border-white text-white items-center justify-center text-[10px] font-bold hover:bg-white hover:text-black transition-all cursor-pointer"
-               >
-                 ?
-               </button>
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="relative">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowQualityMenu(!showQualityMenu); }}
+                className="text-white/80 hover:text-white text-xs font-bold px-2 py-1 rounded bg-white/5 border border-white/10"
+              >
+                {currentQuality || 'AUTO'}
+              </button>
+              
+              {showQualityMenu && qualities.length > 0 && (
+                <div className="absolute bottom-full right-0 mb-4 bg-[#1a1a1a] rounded-xl border border-white/10 shadow-2xl min-w-[120px] py-2">
+                  {qualities.map((q) => (
+                    <button key={q.id} onClick={() => { if (onQualityChange) onQualityChange(q); setShowQualityMenu(false); }} className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-white/5 ${currentQuality === q.quality ? 'text-[var(--primary)]' : 'text-white/60'}`}>
+                      {q.quality}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
+            <button onClick={toggleFullscreen} className="text-white/80 hover:text-white transition-colors">
+              <FontAwesomeIcon icon={isFullscreen ? faCompress : faExpand} />
+            </button>
           </div>
         </div>
       </div>
-
-      {/* Shortcut Info Overlay */}
-      {showShortcutInfo && (
-        <div className="absolute inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[var(--neo-yellow)] border-8 border-black p-8 shadow-[16px_16px_0px_0px_black] max-w-md w-full relative">
-            <button 
-              onClick={() => setShowShortcutInfo(false)}
-              className="absolute top-2 right-2 bg-black text-white w-10 h-10 flex items-center justify-center font-bold border-2 border-black hover:bg-red-500 transition-colors cursor-pointer"
-            >
-              X
-            </button>
-            <h3 className="heading-font text-2xl text-black mb-6 border-b-4 border-black pb-2 italic">SHORTCUT_LOGS</h3>
-            <div className="space-y-4 mono text-black font-bold">
-              <div className="flex justify-between border-b-2 border-black/10 pb-1">
-                <span>PLAY/PAUSE</span>
-                <span className="bg-black text-[var(--neo-yellow)] px-2">SPACE / K</span>
-              </div>
-              <div className="flex justify-between border-b-2 border-black/10 pb-1">
-                <span>FULLSCREEN</span>
-                <span className="bg-black text-[var(--neo-yellow)] px-2">F</span>
-              </div>
-              <div className="flex justify-between border-b-2 border-black/10 pb-1">
-                <span>MUTE</span>
-                <span className="bg-black text-[var(--neo-yellow)] px-2">M</span>
-              </div>
-              <div className="flex justify-between border-b-2 border-black/10 pb-1">
-                <span>FORWARD/BACK</span>
-                <span className="bg-black text-[var(--neo-yellow)] px-2">← / →</span>
-              </div>
-              <div className="flex justify-between border-b-2 border-black/10 pb-1">
-                <span>VOLUME</span>
-                <span className="bg-black text-[var(--neo-yellow)] px-2">↑ / ↓</span>
-              </div>
-              <div className="flex justify-between">
-                <span>HELP</span>
-                <span className="bg-black text-[var(--neo-yellow)] px-2">?</span>
-              </div>
-            </div>
-            <p className="mt-8 text-[10px] text-center uppercase font-black italic opacity-50">System: Encryption Stable // User Authorized</p>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };

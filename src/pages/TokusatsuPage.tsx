@@ -7,8 +7,8 @@ import { authenticatedFetch } from '../utils/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
-const OngoingPage = () => {
-  const [ongoingList, setOngoingList] = useState<Anime[]>([]);
+const TokusatsuPage = () => {
+  const [list, setList] = useState<Anime[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
@@ -20,26 +20,25 @@ const OngoingPage = () => {
       title: item.title,
       thumbnail: item.image_url || '',
       banner: item.image_url || '',
-      episode: item.latest_episode ? `EP ${item.latest_episode}` : '??',
-      status: 'ONGOING',
-      year: item.release_date ? new Date(item.release_date).getFullYear() : 2026,
+      episode: item.latest_episode ? `EP ${item.latest_episode}` : 'FULL',
+      status: 'TAMAT',
+      year: item.date_created ? new Date(item.date_created).getFullYear() : 2026,
       rating: item.rating ? parseFloat(item.rating) : 0,
-      genre: [item.type || 'Anime'],
-      synopsis: item.broadcast ? `Broadcast: ${item.broadcast}` : `Released: ${item.release_date ? new Date(item.release_date).toLocaleDateString() : 'Recently'}`,
-      likes: `${Math.floor(Math.random() * 50) + 1}K`
+      genre: ['Tokusatsu'],
+      synopsis: `Watch ${item.title} on Kanatanime V3.`,
+      likes: '0'
     }));
   };
 
   useEffect(() => {
-    const fetchOngoing = async () => {
+    const fetchTokusatsu = async () => {
       try {
         setLoading(true);
-        const res = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/ongoing?page=${page}`);
+        const res = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/tokusatsu?page=${page}`);
         const json = await res.json();
         
         if (json.status === 'success' && json.data?.data) {
-          const list = json.data.data;
-          setOngoingList(mapApiData(list));
+          setList(mapApiData(json.data.data));
           setHasNextPage(!!json.data.hasNextPage);
         }
       } catch (error) {
@@ -49,25 +48,25 @@ const OngoingPage = () => {
       }
     };
 
-    fetchOngoing();
+    fetchTokusatsu();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
-  if (loading) return <Loader message="Memuat anime ongoing..." />;
+  if (loading) return <Loader message="Memuat koleksi tokusatsu..." />;
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-12 pb-20">
       <header className="space-y-4 pt-8">
         <h1 className="text-3xl md:text-5xl font-bold text-white flex items-center gap-3">
           <span className="w-1.5 h-10 bg-[var(--primary)] rounded-full"></span>
-          Anime Ongoing
+          Koleksi Tokusatsu
         </h1>
-        <p className="text-white/40 text-sm md:text-base font-medium">Update terbaru episode anime yang sedang tayang musim ini.</p>
+        <p className="text-white/40 text-sm md:text-base font-medium">Koleksi lengkap Kamen Rider, Super Sentai, dan Ultraman.</p>
       </header>
 
       <section>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-          {ongoingList.map((anime, index) => (
+          {list.map((anime, index) => (
             <div key={anime.id} className="animate-reveal" style={{ animationDelay: `${index * 0.05}s` }}>
               <AnimeCard anime={anime} />
             </div>
@@ -102,4 +101,4 @@ const OngoingPage = () => {
   );
 };
 
-export default OngoingPage;
+export default TokusatsuPage;

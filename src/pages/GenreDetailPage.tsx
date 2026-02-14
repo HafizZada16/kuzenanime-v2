@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Anime } from '../types';
 import Loader from '../components/Loader';
 import AnimeCard from '../components/AnimeCard';
-import Button from '../components/Button';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
 import { authenticatedFetch } from '../utils/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronLeft, faChevronRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 const GenreDetailPage = () => {
   const { genreId } = useParams<{ genreId: string }>();
@@ -43,7 +44,7 @@ const GenreDetailPage = () => {
         if (json.status === 'success' && json.data?.data) {
           const list = json.data.data;
           setAnimeList(mapApiData(list));
-          setHasNextPage(list.length >= 20);
+          setHasNextPage(!!json.data.hasNextPage);
         }
       } catch (error) {
         console.error('Fetch Error:', error);
@@ -53,49 +54,62 @@ const GenreDetailPage = () => {
     };
 
     fetchGenreDetail();
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [genreId, page]);
 
-  if (loading) return <Loader message="FILTERING DATABASE..." />;
+  if (loading) return <Loader message="Menyaring database..." />;
 
   const genreName = genreId?.replace(/-/g, ' ').toUpperCase();
 
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-12 pb-20">
-      <div className="flex items-center gap-4">
-        <Button variant="black" onClick={() => navigate('/genre')}>← Back to Genres</Button>
-      </div>
-
-      <header className="bg-[#007AFF] border-8 border-black p-8 md:p-12 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transform rotate-1 relative overflow-hidden">
-        <div className="absolute top-0 right-0 opacity-10 font-black text-8xl -translate-y-4 select-none uppercase">{genreId}</div>
-        <h1 className="text-4xl md:text-7xl font-black oswald text-white italic relative z-10">GENRE: {genreName}</h1>
-        <p className="text-lg md:text-2xl font-bold oswald text-black bg-[#FFCC00] px-2 py-1 inline-block mt-4 relative z-10 uppercase">Browsing Category</p>
+    <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-12 pb-20">
+      <header className="space-y-6 pt-8">
+        <button 
+          onClick={() => navigate('/genre')}
+          className="iq-btn-secondary px-4 py-2 text-sm flex items-center gap-2"
+        >
+          <FontAwesomeIcon icon={faArrowLeft} />
+          Semua Genre
+        </button>
+        
+        <div className="space-y-2">
+          <h1 className="text-3xl md:text-5xl font-bold text-white flex items-center gap-3">
+            <span className="w-1.5 h-10 bg-[var(--primary)] rounded-full"></span>
+            Genre: {genreName}
+          </h1>
+          <p className="text-white/40 text-sm md:text-base font-medium">Menampilkan koleksi anime dalam kategori {genreName}.</p>
+        </div>
       </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8">
-        {animeList.map(anime => (
-          <AnimeCard key={anime.id} anime={anime} />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+        {animeList.map((anime, index) => (
+          <div key={anime.id} className="animate-reveal" style={{ animationDelay: `${index * 0.05}s` }}>
+            <AnimeCard anime={anime} />
+          </div>
         ))}
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center gap-4 py-10">
+      <div className="flex justify-center items-center gap-8 py-10">
         <button 
           onClick={() => setPage(p => Math.max(1, p - 1))}
           disabled={page === 1}
-          className={`px-8 py-3 font-black oswald border-4 border-black shadow-[4px_4px_0px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all ${page === 1 ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-white hover:bg-[#FFCC00] text-black'}`}
+          className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 text-white/60 hover:bg-[var(--primary)] hover:text-white transition-all disabled:opacity-10 disabled:pointer-events-none"
         >
-          PREV
+          <FontAwesomeIcon icon={faChevronLeft} />
         </button>
-        <div className="bg-black text-white px-6 py-3 border-4 border-black font-black oswald text-xl flex items-center justify-center min-w-[80px]">
-          {page}
+        
+        <div className="flex flex-col items-center">
+           <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em] mb-1">Halaman</span>
+           <span className="text-white font-black text-2xl tabular-nums">{page}</span>
         </div>
+
         <button 
           onClick={() => setPage(p => p + 1)}
           disabled={!hasNextPage}
-          className={`px-8 py-3 font-black oswald border-4 border-black shadow-[4px_4px_0px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all ${!hasNextPage ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-[#FF3B30] text-white hover:bg-red-600'}`}
+          className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 text-white/60 hover:bg-[var(--primary)] hover:text-white transition-all disabled:opacity-10 disabled:pointer-events-none"
         >
-          NEXT
+          <FontAwesomeIcon icon={faChevronRight} />
         </button>
       </div>
     </div>

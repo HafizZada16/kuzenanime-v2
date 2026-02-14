@@ -8,6 +8,9 @@ import { DetailedAnime } from '../types';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
 import { authenticatedFetch } from '../utils/api';
 import { sortEpisodes } from '../utils/episode';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay } from '@fortawesome/free-solid-svg-icons';
+import SEO from '../components/SEO';
 
 interface StreamData {
   id: string;
@@ -25,14 +28,66 @@ const WatchPage = () => {
   const [animeDetail, setAnimeDetail] = useState<DetailedAnime | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchingEpisode, setFetchingEpisode] = useState(false);
+  const [isAutoNext, setIsAutoNext] = useState(true);
+  const [showAutoNextOverlay, setShowAutoNextOverlay] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   const [currentStream, setCurrentStream] = useState<StreamData | null>(null);
   const activeEpisodeRef = useRef<HTMLButtonElement>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (activeEpisodeRef.current) {
-      activeEpisodeRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [episodeSlug, animeDetail]);
+    // Load preference
+    const saved = localStorage.getItem('kanata_auto_next');
+    if (saved !== null) setIsAutoNext(saved === 'true');
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('kanata_auto_next', isAutoNext.toString());
+  }, [isAutoNext]);
+
+  const getAdjacentEpisodes = () => {
+    if (!animeDetail || !animeDetail.episodes || !episodeSlug) return { prev: null, next: null };
+    const list = animeDetail.episodes; 
+    const currentIndex = list.findIndex(ep => ep.slug === episodeSlug);
+    if (currentIndex === -1) return { prev: null, next: null };
+    return {
+      prev: currentIndex > 0 ? list[currentIndex - 1] : null,
+      next: currentIndex < list.length - 1 ? list[currentIndex + 1] : null
+    };
+  };
+
+  const { prev, next } = getAdjacentEpisodes();
+
+  const startAutoNextCountdown = () => {
+    if (!next || !isAutoNext) return;
+    setShowAutoNextOverlay(true);
+    setCountdown(5);
+    
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    
+    countdownIntervalRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+          navigate(`/watch/${slug}/${next.slug}`);
+          setShowAutoNextOverlay(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const cancelAutoNext = () => {
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    setShowAutoNextOverlay(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -127,183 +182,236 @@ const WatchPage = () => {
   }, [slug, episodeSlug]);
 
 
-  const getAdjacentEpisodes = () => {
-    if (!animeDetail || !animeDetail.episodes || !episodeSlug) return { prev: null, next: null };
-    
-    const list = animeDetail.episodes; // Already sorted oldest first
-    const currentIndex = list.findIndex(ep => ep.slug === episodeSlug);
-    
-    if (currentIndex === -1) return { prev: null, next: null };
-
-    return {
-      prev: currentIndex > 0 ? list[currentIndex - 1] : null,
-      next: currentIndex < list.length - 1 ? list[currentIndex + 1] : null
-    };
-  };
-
-  const { prev, next } = getAdjacentEpisodes();
-
-  if (loading && !animeDetail) return <Loader message="DECODING STREAM SIGNAL..." />;
+  if (loading && !animeDetail) return <Loader message="Menyiapkan video..." />;
 
   const currentEpisode = animeDetail?.episodes.find(ep => ep.slug === episodeSlug);
 
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-8 pb-20">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-8 pb-20">
+      {animeDetail && currentEpisode && (
+        <SEO 
+          title={`Nonton ${animeDetail.title} ${currentEpisode.title}`}
+          description={`Streaming ${animeDetail.title} ${currentEpisode.title} Subtitle Indonesia gratis dengan kualitas HD di KANATA V3.`}
+          image={animeDetail.banner || animeDetail.thumbnail}
+          type="video.episode"
+        />
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Video Player Section */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/5 group">
+            <VideoPlayer 
+              episodeId={episodeSlug}
+              src={currentStream?.streaming_url} 
+              title={animeDetail?.title}
+              qualities={streams}
+              currentQuality={currentStream?.quality}
+              onQualityChange={(stream) => {
+                setCurrentStream(stream);
+                localStorage.setItem('preferred_quality', stream.quality);
+              }}
+              onEnded={() => {
+                if (next) {
+                  if (isAutoNext) {
+                    startAutoNextCountdown();
+                  } else {
+                    // Just stay or manual
+                  }
+                }
+              }}
+            />
 
-      
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        <div className="lg:col-span-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-3 space-y-8">
-            <div className="relative">
-              <div className="aspect-video bg-black border-8 border-black shadow-[16px_16px_0px_0px_var(--neo-coral)] relative overflow-hidden z-10 group">
-                <VideoPlayer 
-                  episodeId={episodeSlug}
-                  src={currentStream?.streaming_url} 
-                  title={animeDetail?.title}
-                  qualities={streams}
-                  currentQuality={currentStream?.quality}
-                  onQualityChange={(stream) => {
-                    setCurrentStream(stream);
-                    localStorage.setItem('preferred_quality', stream.quality);
-                  }}
-                  onEnded={() => {
-                    if (next) {
-                      navigate(`/watch/${slug}/${next.slug}`);
-                    }
-                  }}
-                />
-
-                {fetchingEpisode && (
-                  <div className="absolute inset-0 z-30 bg-black/80 flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="w-12 h-12 border-4 border-[var(--neo-yellow)] border-t-transparent animate-spin"></div>
-                      <span className="font-normal heading-font text-white tracking-tighter italic">FETCHING NEXT EPISODE...</span>
+            {/* Auto Next Overlay */}
+            {showAutoNextOverlay && next && (
+              <div className="absolute inset-0 z-40 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-reveal">
+                <div className="space-y-6 max-w-sm">
+                  <div className="relative w-24 h-24 mx-auto">
+                    <svg className="w-full h-full transform -rotate-90">
+                      <circle
+                        cx="48"
+                        cy="48"
+                        r="40"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="transparent"
+                        className="text-white/10"
+                      />
+                      <circle
+                        cx="48"
+                        cy="48"
+                        r="40"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="transparent"
+                        strokeDasharray={251.2}
+                        strokeDashoffset={251.2 - (251.2 * countdown) / 5}
+                        className="text-[var(--primary)] transition-all duration-1000 linear"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-3xl font-black tabular-nums text-white">{countdown}</span>
                     </div>
                   </div>
-                )}
+                  
+                  <div className="space-y-2">
+                    <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Episode Selanjutnya</p>
+                    <h3 className="text-xl font-bold text-white line-clamp-2">{next.title}</h3>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button 
+                      onClick={() => navigate(`/watch/${slug}/${next.slug}`)}
+                      className="iq-btn-primary flex-1"
+                    >
+                      Putar Sekarang
+                    </button>
+                    <button 
+                      onClick={cancelAutoNext}
+                      className="iq-btn-secondary flex-1"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                </div>
               </div>
+            )}
 
-              <div className="grid grid-cols-3 text-black mt-8 gap-4">
-                {prev ? (
-                  <button 
-                    onClick={() => navigate(`/watch/${slug}/${prev.slug}`)}
-                    className="bg-white border-4 border-black p-4 font-normal heading-font uppercase text-xs md:text-sm hover:bg-[var(--neo-yellow)] shadow-[4px_4px_0px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all cursor-pointer tracking-tighter"
-                  >
-                    ← PREV
-                  </button>
-                ) : <div />}
-                
-                <button 
-                  onClick={() => navigate(`/detail/${slug}`)}
-                  className="bg-black text-white border-4 border-black p-4 font-normal heading-font uppercase text-xs md:text-sm hover:bg-gray-800 shadow-[4px_4px_0px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all cursor-pointer tracking-tighter"
-                >
-                  LIST
-                </button>
-
-                {next ? (
-                  <button 
-                    onClick={() => navigate(`/watch/${slug}/${next.slug}`)}
-                    className="bg-white border-4 border-black p-4 font-normal heading-font uppercase text-xs md:text-sm hover:bg-[var(--neo-yellow)] shadow-[4px_4px_0px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all cursor-pointer tracking-tighter"
-                  >
-                    NEXT →
-                  </button>
-                ) : <div />}
+            {fetchingEpisode && !showAutoNextOverlay && (
+              <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-10 h-10 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-white/60 text-sm font-medium">Memuat Episode Selanjutnya...</span>
+                </div>
               </div>
+            )}
+          </div>
 
-              <div className="absolute -inset-4 bg-[var(--neo-yellow)] -z-10 border-4 border-black transform rotate-1 opacity-10"></div>
+          {/* Navigation Controls */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button 
+                onClick={() => prev && navigate(`/watch/${slug}/${prev.slug}`)}
+                disabled={!prev}
+                className="iq-btn-secondary flex-1 sm:flex-none px-4 py-2 text-sm disabled:opacity-20 disabled:pointer-events-none"
+              >
+                <FontAwesomeIcon icon={faPlay} className="rotate-180 mr-2" />
+                Sebelumnya
+              </button>
+              <button 
+                onClick={() => next && navigate(`/watch/${slug}/${next.slug}`)}
+                disabled={!next}
+                className="iq-btn-primary flex-1 sm:flex-none px-4 py-2 text-sm disabled:opacity-20 disabled:pointer-events-none"
+              >
+                Selanjutnya
+                <FontAwesomeIcon icon={faPlay} className="ml-2" />
+              </button>
             </div>
+            
+            <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <span className="text-xs font-bold text-white/40 uppercase tracking-widest group-hover:text-white/60 transition-colors">Auto Next</span>
+                <div 
+                  onClick={() => setIsAutoNext(!isAutoNext)}
+                  className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${isAutoNext ? 'bg-[var(--primary)]' : 'bg-white/10'}`}
+                >
+                  <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform duration-300 ${isAutoNext ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                </div>
+              </label>
 
-            <div className="bg-white border-8 border-black p-6 md:p-12 text-black shadow-[16px_16px_0px_0px_var(--neo-purple)] relative overflow-hidden">
-              <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
-              <div className="relative mb-12">
-                <div className="bg-[var(--neo-coral)] text-white p-5 md:p-8 border-4 border-black transform -rotate-1 shadow-[8px_8px_0px_0px_black] inline-block mb-6">
-                  <h1 className="text-xl md:text-3xl lg:text-4xl font-normal heading-font uppercase leading-tight italic tracking-tighter">
-                    {animeDetail?.title} - {currentEpisode?.title}
-                  </h1>
-                </div>
-                <div className="absolute -top-4 -right-4 bg-black text-[var(--neo-yellow)] px-4 py-1 font-normal heading-font text-[10px] transform rotate-3 border-2 border-white tracking-tighter">
-                  NOW_STREAMING
-                </div>
-              </div>
-              
-              <div className="space-y-10 relative z-10">
-                <div className="border-t-4 border-black pt-8">
-                  <div className="flex items-center gap-4 mb-8">
-                    <h3 className="font-normal heading-font text-xl uppercase italic bg-[var(--neo-yellow)] px-4 py-1 border-4 border-black tracking-tighter">Stream Quality</h3>
-                    <div className="flex-1 h-1 bg-black opacity-20"></div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-4">
-                    {streams.map((stream) => (
-                      <button
-                        key={stream.id}
-                        onClick={() => setCurrentStream(stream)}
-                        className={`px-6 py-4 font-normal heading-font text-sm uppercase border-4 border-black transition-all cursor-pointer shadow-[6px_6px_0px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 tracking-tighter ${
-                          currentStream?.id === stream.id ? 'bg-[var(--neo-coral)] text-white' : 'bg-white text-black hover:bg-[var(--neo-yellow)]'
-                        }`}
-                      >
-                        {stream.quality} <span className="text-[10px] opacity-70 mono ml-2">({stream.file_size}MB)</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <button 
+                onClick={() => navigate(`/detail/${slug}`)}
+                className="iq-btn-secondary px-4 py-2 text-sm"
+              >
+                Info Anime
+              </button>
             </div>
           </div>
 
-          <div className="lg:col-span-1 space-y-8">
-             <div className="space-y-4">
-                <div className="bg-black text-[var(--neo-yellow)] p-4 border-4 border-white shadow-[4px_4px_0px_0px_black] text-center">
-                    <h3 className="font-normal heading-font text-lg italic uppercase tracking-tighter">Episode List</h3>
-                </div>
-                <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_black] max-h-[300px] lg:max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-black scrollbar-track-transparent">
-                    {animeDetail?.episodes?.map((ep, idx) => (
-                    <button
-                        key={idx}
-                        ref={ep.slug === episodeSlug ? activeEpisodeRef : null}
-                        onClick={() => navigate(`/watch/${slug}/${ep.slug}`)}
-                        className={`w-full text-left p-4 border-b-4 border-black font-normal heading-font text-[10px] uppercase flex items-center gap-4 transition-colors tracking-tighter ${
-                        ep.slug === episodeSlug ? 'bg-[var(--neo-coral)] text-white' : 'text-black hover:bg-[var(--neo-yellow)]'
-                        }`}
-                    >
-                        <span className="w-10 h-10 shrink-0 flex items-center justify-center border-2 border-current italic bg-black/10 text-xs">{ep.episode}</span>
-                        <span className="truncate">{ep.title}</span>
-                    </button>
-                    ))}
-                </div>
-             </div>
+          {/* Metadata Section */}
+          <div className="bg-white/5 rounded-2xl p-6 md:p-8 space-y-6">
+            <div>
+               <h1 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight">
+                 {animeDetail?.title} - {currentEpisode?.title}
+               </h1>
+               <div className="flex items-center gap-3 text-white/40 text-xs">
+                  <span className="text-yellow-400 font-bold">★ {animeDetail?.rating}</span>
+                  <span>•</span>
+                  <span>{animeDetail?.year}</span>
+                  <span>•</span>
+                  <span>{currentEpisode?.date}</span>
+               </div>
+            </div>
 
-             <div className="bg-[var(--neo-yellow)] p-6 border-8 border-black shadow-[12px_12px_0px_0px_black] relative overflow-hidden group">
-                <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 2px, transparent 2px)', backgroundSize: '15px 15px' }}></div>
-                <div className="relative z-10">
-                  <div className="bg-black text-white p-4 border-4 border-white mb-8 transform rotate-1 shadow-[8px_8px_0px_0px_white]">
-                    <h3 className="font-normal heading-font text-lg italic uppercase text-center tracking-tighter">DOWNLOAD</h3>
-                  </div>
-                  <div className="space-y-4">
-                    {streams.map((stream) => (
-                      <a 
-                        key={stream.id}
-                        href={stream.download_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center justify-between bg-white text-black font-bold mono p-4 border-4 border-black hover:bg-black hover:text-white transition-all transform hover:-translate-x-1 shadow-[4px_4px_0px_0px_black]"
-                      >
-                        <span className="text-xs">{stream.quality}</span>
-                        <span className="bg-[var(--neo-purple)] text-white px-2 py-1 text-[9px] border-2 border-black">GET ({stream.file_size}MB)</span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-             </div>
+            <div className="space-y-4 pt-6 border-t border-white/5">
+              <h3 className="font-bold text-sm text-white/60 uppercase tracking-wider">Kualitas Video</h3>
+              <div className="flex flex-wrap gap-2">
+                {streams.map((stream) => (
+                  <button
+                    key={stream.id}
+                    onClick={() => setCurrentStream(stream)}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      currentStream?.id === stream.id 
+                      ? 'bg-[var(--primary)] text-white' 
+                      : 'bg-white/5 text-white/60 hover:bg-white/10'
+                    }`}
+                  >
+                    {stream.quality} <span className="text-[9px] opacity-40 ml-1">({stream.file_size}MB)</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="lg:col-span-12">
-            <div className="bg-black text-white p-6 border-4 border-[#FF3B30] shadow-[8px_8px_0px_0px_#FF3B30]">
-               <p className="font-black oswald text-xs uppercase italic leading-tight">
-                 // WARNING: Secure connection established. High-speed data transfer in progress.
-               </p>
-            </div>
+        {/* Sidebar Section */}
+        <div className="lg:col-span-4 space-y-6">
+           {/* Episode List Sidebar */}
+           <div className="bg-white/5 rounded-2xl overflow-hidden border border-white/5">
+              <div className="p-4 border-b border-white/5">
+                 <h3 className="font-bold text-sm">Daftar Episode</h3>
+              </div>
+              <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                  {animeDetail?.episodes?.map((ep, idx) => (
+                  <button
+                      key={idx}
+                      ref={ep.slug === episodeSlug ? activeEpisodeRef : null}
+                      onClick={() => navigate(`/watch/${slug}/${ep.slug}`)}
+                      className={`w-full text-left p-3 flex items-center gap-3 transition-colors ${
+                      ep.slug === episodeSlug 
+                      ? 'bg-[var(--primary)]/10 text-[var(--primary)]' 
+                      : 'text-white/60 hover:bg-white/5 hover:text-white'
+                      }`}
+                  >
+                      <span className="w-8 h-8 shrink-0 flex items-center justify-center rounded bg-white/5 text-[10px] font-bold">{ep.episode}</span>
+                      <span className="text-xs truncate font-medium">{ep.title.replace(animeDetail.title, '').trim() || `Episode ${ep.episode}`}</span>
+                  </button>
+                  ))}
+              </div>
+           </div>
+
+           {/* Download Section */}
+           <div className="bg-white/5 rounded-2xl p-6 border border-white/5 space-y-4">
+              <h3 className="font-bold text-sm">Unduh Video</h3>
+              <div className="space-y-2">
+                {streams.map((stream) => (
+                  <a 
+                    key={stream.id}
+                    href={stream.download_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between bg-white/5 p-3 rounded-xl hover:bg-white/10 transition-all group"
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-bold text-white/80">{stream.quality}</span>
+                      <span className="text-[10px] text-white/40">{stream.file_size}MB</span>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center group-hover:bg-[var(--primary)] group-hover:text-white transition-all">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    </div>
+                  </a>
+                ))}
+              </div>
+           </div>
         </div>
       </div>
     </div>

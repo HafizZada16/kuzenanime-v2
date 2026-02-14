@@ -73,88 +73,87 @@ const AuthorPage = () => {
   if (loading) return <Loader message="DECRYPTING_AUTHOR_INTEL..." />;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 space-y-16">
-      <div className="text-center space-y-4">
-        <h1 className="text-5xl md:text-8xl font-black oswald italic tracking-tighter uppercase inline-block bg-white text-black border-8 border-black p-4 shadow-[12px_12px_0px_0px_var(--neo-yellow)] transform -rotate-2">
-          MEET_THE_SQUAD
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 space-y-16 pb-20">
+      <header className="text-center space-y-4 pt-8">
+        <h1 className="text-4xl md:text-7xl font-bold text-white tracking-tighter uppercase">
+          Meet The <span className="text-[var(--primary)]">Squad</span>
         </h1>
-        <p className="text-xl md:text-2xl font-bold mono text-[var(--neo-coral)] uppercase italic tracking-widest">
-           // ARCHITECTS OF THE ANIME REVOLUTION
+        <p className="text-white/40 text-sm md:text-lg font-medium max-w-2xl mx-auto uppercase tracking-[0.2em]">
+           Architects of the anime revolution
         </p>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {authors.map((author, idx) => (
           <div 
             key={idx} 
-            className="group relative bg-white border-8 border-black p-8 shadow-[16px_16px_0px_0px_black] hover:shadow-[24px_24px_0px_0px_black] hover:-translate-x-2 hover:-translate-y-2 transition-all"
+            className="group relative bg-white/5 border border-white/5 p-8 rounded-3xl backdrop-blur-sm transition-all duration-500 hover:bg-white/10 hover:border-[var(--primary)]/20 animate-reveal"
+            style={{ animationDelay: `${idx * 0.1}s` }}
           >
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="shrink-0 w-32 h-32 border-4 border-black shadow-[8px_8px_0px_0px_black] overflow-hidden transform group-hover:rotate-3 transition-transform">
+            <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
+              <div className="shrink-0 w-32 h-32 rounded-2xl overflow-hidden shadow-2xl border border-white/10 group-hover:scale-105 transition-transform duration-500">
                 <img src={author.avatar} alt={author.name} className="w-full h-full object-cover" />
               </div>
               
               <div className="space-y-4 flex-1">
                 <div>
-                  <Badge color={author.color} className="text-xs mb-2">
+                  <div className="inline-block px-2 py-0.5 rounded bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold uppercase tracking-wider mb-2">
                     {author.role}
-                  </Badge>
-                  <h2 className="text-4xl font-black oswald uppercase italic leading-none tracking-tighter text-black">
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-white leading-none">
                     {author.name}
                   </h2>
                 </div>
                 
-                <p className="text-black font-bold italic opacity-80 border-l-4 border-black pl-4">
+                <p className="text-white/60 text-sm leading-relaxed italic">
                   "{author.description}"
                 </p>
 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-[10px] font-black mono text-black/40 uppercase">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-white/20 uppercase tracking-widest">
                     <FontAwesomeIcon icon={faCode} /> skills_matrix
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {author.skills.map(skill => (
-                      <Badge key={skill} color="black" className="text-[9px]">
+                      <span key={skill} className="px-2 py-1 bg-white/5 rounded text-[10px] font-medium text-white/40">
                         {skill}
-                      </Badge>
+                      </span>
                     ))}
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-4 pt-4">
-                  <a href={author.github} target="_blank" rel="noreferrer" className="flex-1 min-w-[140px]">
-                    <Button variant="black" className="w-full text-[10px] flex items-center justify-center gap-2 py-2">
-                      <FontAwesomeIcon icon={faGithub} /> GITHUB_PROFILE
-                    </Button>
+                <div className="flex flex-wrap gap-3 pt-4">
+                  <a href={author.github} target="_blank" rel="noreferrer" className="flex-1">
+                    <button className="iq-btn-secondary w-full text-[10px] py-2 flex items-center justify-center gap-2">
+                      <FontAwesomeIcon icon={faGithub} /> GITHUB
+                    </button>
                   </a>
-                  <a href={author.website} target="_blank" rel="noreferrer" className="flex-1 min-w-[140px]">
-                    <Button variant={author.color} className="w-full text-[10px] flex items-center justify-center gap-2 py-2">
+                  <a href={author.website} target="_blank" rel="noreferrer" className="flex-1">
+                    <button className="iq-btn-primary w-full text-[10px] py-2 flex items-center justify-center gap-2">
                       <FontAwesomeIcon icon={faGlobe} /> WEBSITE
-                    </Button>
+                    </button>
                   </a>
                 </div>
               </div>
             </div>
-            
-            {/* Decorative element */}
-            <div className={`absolute -bottom-4 -right-4 w-12 h-12 border-4 border-black -z-10 bg-[var(--neo-${author.color})]`}></div>
           </div>
         ))}
       </div>
 
-      <div className="bg-black text-white p-12 border-8 border-[#FF3B30] shadow-[20px_20px_0px_0px_#FF3B30] relative overflow-hidden">
-         <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-            <FontAwesomeIcon icon={faCode} className="text-[120px]" />
+      <div className="bg-white/5 rounded-3xl p-8 md:p-16 border border-white/5 relative overflow-hidden text-center space-y-8">
+         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+            <FontAwesomeIcon icon={faCode} className="text-[150px]" />
          </div>
-         <div className="relative z-10 space-y-6 text-center">
-            <h3 className="text-3xl md:text-5xl font-black oswald italic uppercase text-[#FFCC00]">MISSION_STATEMENT</h3>
-            <p className="text-xl md:text-2xl font-bold max-w-3xl mx-auto leading-relaxed">
-              KANATANIME V3 ADALAH PLATFORM STREAMING ANIME YANG DIKEMBANGKAN DENGAN ❤️ OLEH ROY ANTIDONASI DKK. KAMI BERKOMITMEN UNTUK MEMBERIKAN PENGALAMAN MENONTON TERBAIK TANPA GANGGUAN.
+         <div className="relative z-10 space-y-6">
+            <h3 className="text-2xl md:text-4xl font-bold text-[var(--primary)] uppercase tracking-tight">Mission Statement</h3>
+            <p className="text-lg md:text-2xl font-medium text-white/60 max-w-3xl mx-auto leading-relaxed italic">
+              "Platform streaming anime yang dikembangkan dengan ❤️ untuk memberikan pengalaman menonton terbaik tanpa gangguan bagi seluruh penggemar anime di Indonesia."
             </p>
-            <div className="pt-8">
-              <span className="bg-[#FF3B30] text-white px-8 py-4 font-black oswald text-2xl border-4 border-white shadow-[8px_8px_0px_0px_white] inline-block transform rotate-1">
-                POWERED_BY_ANTIDONASI_TEAM
-              </span>
+            <div className="pt-4">
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full text-lg font-bold border border-[var(--primary)]/20 shadow-lg shadow-green-500/10">
+                <span className="w-2 h-2 bg-[var(--primary)] rounded-full animate-pulse"></span>
+                Powered by AntiDonasi Team
+              </div>
             </div>
          </div>
       </div>

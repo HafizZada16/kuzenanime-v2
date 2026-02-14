@@ -2,7 +2,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
-const BASE_URL = 'https://v3.animekompi.fun';
+const BASE_URL = 'https://v5.animekompi.fun';
 
 const headers = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -23,81 +23,93 @@ export const scrapeHome = async () => {
     const { data } = await axios.get(BASE_URL, { headers });
     const $ = cheerio.load(data);
     
-    const latestUpdates: any[] = [];
-    $('.listupd .bs').each((i, el) => {
-      const title = cleanTitle($(el).find('.tt').text());
+    // 1. Latest Episodes (Rilisan Terbaru)
+    const latestEpisodes: any[] = [];
+    $('.listupd.normal .bs').each((i, el) => {
+      const title = cleanTitle($(el).find('.tt h2').text());
       const url = $(el).find('a').attr('href') || '';
       const id = url.split('/').filter(Boolean).pop() || '';
       const thumbnail = getThumbnail($(el));
       const episode = $(el).find('.epx').text().trim();
       
-      latestUpdates.push({
+      latestEpisodes.push({
         id,
         title,
-        image_url: thumbnail,
-        latest_episode: episode.replace('Ep ', '').replace('Episode ', ''),
+        thumbnail,
+        episode: episode.replace('Ep ', '').replace('Episode ', ''),
         type: 'episode',
         date_created: new Date().toISOString()
       });
     });
 
-    // Scrape Popular/Trending from Sidebar (which links to /anime/ slugs)
-    const sidebarTrending: any[] = [];
-    $('.serieslist ul li').each((i, el) => {
-        const title = cleanTitle($(el).find('.leftseries h2, .leftseries h3').text() || $(el).find('a').attr('title') || '');
+    // 2. Top 10 Trending Hari Ini
+    const topTrending: any[] = [];
+    $('#hothome').next('.listupd').find('.bs').each((i, el) => {
+        const title = cleanTitle($(el).find('.tt').text());
         const url = $(el).find('a').attr('href') || '';
         const id = url.split('/').filter(Boolean).pop() || '';
         const thumbnail = getThumbnail($(el));
+        const rating = $(el).find('.numscore').text().trim();
         
-        if (id && !sidebarTrending.find(t => t.id === id)) {
-            sidebarTrending.push({
-                id,
-                title,
-                image_url: thumbnail,
-                type: 'anime',
-                date_created: new Date().toISOString()
+        topTrending.push({
+            id,
+            title,
+            thumbnail,
+            rating: parseFloat(rating) || 0,
+            type: 'anime',
+            status: 'ONGOING'
+        });
+    });
+
+    // 3. New Series (New Series/Movie) - Scraped from the sidebar widget or bottom section
+    const newSeries: any[] = [];
+    // Looking for series in the big bixbox or list
+    $('.bixbox').each((i, el) => {
+        const header = $(el).find('.releases h3').text();
+        if (header.includes('New Series')) {
+            $(el).find('.bs').each((j, bs) => {
+                const title = cleanTitle($(bs).find('.tt').text());
+                const url = $(bs).find('a').attr('href') || '';
+                const id = url.split('/').filter(Boolean).pop() || '';
+                const thumbnail = getThumbnail($(bs));
+                newSeries.push({ id, title, thumbnail, type: 'anime' });
             });
         }
     });
 
-    // Merge or fallback: If slider wants series, use sidebarTrending.
-    // If sidebarTrending is empty, we fallback to latest but mark as episodes.
-    const finalTrending = sidebarTrending.length > 0 ? sidebarTrending : latestUpdates;
+    // Fallback for newSeries if the AJAX cache prevented scraping
+    if (newSeries.length === 0) {
+        // Scrape from Movie page as fallback for cinematic content
+        try {
+            const mRes = await axios.get(`${BASE_URL}/movie/`, { headers });
+            const $m = cheerio.load(mRes.data);
+            $m('.listupd .bs').slice(0, 10).each((i, el) => {
+                const title = cleanTitle($m(el).find('.tt').text());
+                const id = ($m(el).find('a').attr('href') || '').split('/').filter(Boolean).pop() || '';
+                newSeries.push({ id, title, thumbnail: getThumbnail($m(el)), type: 'movie' });
+            });
+        } catch (e) {}
+    }
 
-    // Fetch Movies
-    const moviesRes = await axios.get(`${BASE_URL}/movie/`, { headers });
-    const $m = cheerio.load(moviesRes.data);
-    const movies: any[] = [];
-    $m('.listupd .bs').each((i, el) => {
-        if (i < 10) {
-            const title = cleanTitle($m(el).find('.tt').text());
-            const url = $m(el).find('a').attr('href') || '';
-            const id = url.split('/').filter(Boolean).pop() || '';
-            const thumbnail = getThumbnail($m(el));
-            movies.push({ id, title, image_url: thumbnail, type: 'movie' });
-        }
-    });
-
-    // Fetch Donghua
-    const donghuaRes = await axios.get(`${BASE_URL}/genres/donghua/`, { headers });
-    const $c = cheerio.load(donghuaRes.data);
-    const donghua: any[] = [];
-    $c('.listupd .bs').each((i, el) => {
-        if (i < 10) {
-            const title = cleanTitle($c(el).find('.tt').text());
-            const url = $c(el).find('a').attr('href') || '';
-            const id = url.split('/').filter(Boolean).pop() || '';
-            const thumbnail = getThumbnail($c(el));
-            donghua.push({ id, title, image_url: thumbnail, type: 'donghua' });
+    // 4. Batch Terbaru
+    const latestBatch: any[] = [];
+    $('.bixbox').each((i, el) => {
+        if ($(el).find('.releases h3').text().includes('BATCH')) {
+            $(el).find('.bs').each((j, bs) => {
+                const title = cleanTitle($(bs).find('.tt').text());
+                const id = ($(bs).find('a').attr('href') || '').split('/').filter(Boolean).pop() || '';
+                latestBatch.push({ id, title, thumbnail: getThumbnail($(bs)), type: 'batch' });
+            });
         }
     });
     
     return {
       status: 'success',
       data: [
-        { type: 'all_trending', data: finalTrending.slice(0, 15) },
-        { type: 'all_movies', data: movies },
-        { type: 'all_completed', data: donghua }
+        { type: 'latest_episodes', data: latestEpisodes.slice(0, 12) },
+        { type: 'trending', data: topTrending.slice(0, 10) },
+        { type: 'new_series', data: newSeries.slice(0, 12) },
+        { type: 'latest_batch', data: latestBatch.slice(0, 12) }
       ]
     };
   } catch (error) {
@@ -129,16 +141,18 @@ export const scrapeAnimeList = async (params: string = '') => {
                 date_created: new Date().toISOString()
             });
         });
-        return { status: 'success', data: { data: list } };
+        const hasNextPage = $('.pagination .next').length > 0;
+        return { status: 'success', data: { data: list, hasNextPage } };
     } catch (error) {
         console.error('scrapeAnimeList error:', error);
         throw error;
     }
 }
 
-export const scrapeSearch = async (query: string) => {
+export const scrapeSearch = async (query: string, page: string = '1') => {
     try {
-        const { data } = await axios.get(`${BASE_URL}/?s=${encodeURIComponent(query)}`, { headers });
+        const url = page === '1' ? `${BASE_URL}/?s=${encodeURIComponent(query)}` : `${BASE_URL}/page/${page}/?s=${encodeURIComponent(query)}`;
+        const { data } = await axios.get(url, { headers });
         const $ = cheerio.load(data);
         const list: any[] = [];
         $('.listupd .bs').each((i, el) => {
@@ -154,7 +168,8 @@ export const scrapeSearch = async (query: string) => {
                 type: 'anime',
             });
         });
-        return { status: 'success', data: { data: list } };
+        const hasNextPage = $('.pagination .next').length > 0;
+        return { status: 'success', data: { data: list, hasNextPage } };
     } catch (error) {
         console.error('scrapeSearch error:', error);
         throw error;
@@ -488,7 +503,8 @@ export const scrapeMovieList = async (page: string = '1') => {
                 date_created: new Date().toISOString()
             });
         });
-        return { status: 'success', data: { data: list } };
+        const hasNextPage = $('.pagination .next').length > 0;
+        return { status: 'success', data: { data: list, hasNextPage } };
     } catch (error) {
         console.error('scrapeMovieList error:', error);
         throw error;
@@ -518,10 +534,146 @@ export const scrapeDonghuaList = async (page: string = '1') => {
                 date_created: new Date().toISOString()
             });
         });
-        return { status: 'success', data: { data: list } };
+        const hasNextPage = $('.pagination .next').length > 0;
+        return { status: 'success', data: { data: list, hasNextPage } };
     } catch (error) {
         console.error('scrapeDonghuaList error:', error);
         throw error;
     }
 }
+
+export const scrapeTokusatsuList = async (page: string = '1') => {
+    try {
+        const url = page === '1' ? `${BASE_URL}/genres/tokusatsu/` : `${BASE_URL}/genres/tokusatsu/page/${page}/`;
+        const { data } = await axios.get(url, { headers });
+        const $ = cheerio.load(data);
+        const list: any[] = [];
+        
+        $('.listupd .bs').each((i, el) => {
+            const title = cleanTitle($(el).find('.tt').text());
+            const url = $(el).find('a').attr('href') || '';
+            const id = url.split('/').filter(Boolean).pop() || '';
+            const thumbnail = getThumbnail($(el));
+            const rating = $(el).find('.numscore').text().trim();
+            
+            list.push({
+                id,
+                title,
+                image_url: thumbnail,
+                rating,
+                type: 'anime',
+                date_created: new Date().toISOString()
+            });
+        });
+        const hasNextPage = $('.pagination .next').length > 0;
+        return { status: 'success', data: { data: list, hasNextPage } };
+    } catch (error) {
+        console.error('scrapeTokusatsuList error:', error);
+        throw error;
+    }
+}
+
+export const scrapeGenreList = async () => {
+    try {
+        const { data } = await axios.get(`${BASE_URL}/genres/`, { headers });
+        const $ = cheerio.load(data);
+        const genres: any[] = [];
+        $('.taxindex li a').each((i, el) => {
+            const name = $(el).find('.name').text().trim();
+            const url = $(el).attr('href') || '';
+            const id = url.split('/').filter(Boolean).pop() || '';
+            if (id && name) {
+                genres.push({ id, name });
+            }
+        });
+        return { status: 'success', data: genres };
+    } catch (error) {
+        console.error('scrapeGenreList error:', error);
+        throw error;
+    }
+};
+
+export const scrapeGenreDetail = async (genreId: string, page: string = '1') => {
+    try {
+        const url = page === '1' ? `${BASE_URL}/genres/${genreId}/` : `${BASE_URL}/genres/${genreId}/page/${page}/`;
+        const { data } = await axios.get(url, { headers });
+        const $ = cheerio.load(data);
+        const list: any[] = [];
+        $('.listupd .bs').each((i, el) => {
+            const title = cleanTitle($(el).find('.tt').text());
+            const itemUrl = $(el).find('a').attr('href') || '';
+            const id = itemUrl.split('/').filter(Boolean).pop() || '';
+            const thumbnail = getThumbnail($(el));
+            const episode = $(el).find('.epx').text().trim();
+            const rating = $(el).find('.numscore').text().trim();
+            
+            list.push({
+                id,
+                title,
+                image_url: thumbnail,
+                latest_episode: episode.replace('Ep ', '').replace('Episode ', ''),
+                rating,
+                type: 'anime',
+                date_created: new Date().toISOString()
+            });
+        });
+        const hasNextPage = $('.pagination .next').length > 0;
+        return { status: 'success', data: { data: list, hasNextPage } };
+    } catch (error) {
+        console.error('scrapeGenreDetail error:', error);
+        throw error;
+    }
+};
+
+export const scrapeSeasonList = async () => {
+    try {
+        const { data } = await axios.get(`${BASE_URL}/season/`, { headers });
+        const $ = cheerio.load(data);
+        const seasons: any[] = [];
+        $('.taxindex li a').each((i, el) => {
+            const name = $(el).find('.name').text().trim();
+            const url = $(el).attr('href') || '';
+            const id = url.split('/').filter(Boolean).pop() || '';
+            if (id && name) {
+                seasons.push({ id, name });
+            }
+        });
+        return { status: 'success', data: seasons };
+    } catch (error) {
+        console.error('scrapeSeasonList error:', error);
+        throw error;
+    }
+};
+
+export const scrapeSeasonDetail = async (seasonId: string, page: string = '1') => {
+    try {
+        const url = page === '1' ? `${BASE_URL}/season/${seasonId}/` : `${BASE_URL}/season/${seasonId}/page/${page}/`;
+        const { data } = await axios.get(url, { headers });
+        const $ = cheerio.load(data);
+        const list: any[] = [];
+        $('.listupd .bs').each((i, el) => {
+            const title = cleanTitle($(el).find('.tt').text());
+            const itemUrl = $(el).find('a').attr('href') || '';
+            const id = itemUrl.split('/').filter(Boolean).pop() || '';
+            const thumbnail = getThumbnail($(el));
+            const episode = $(el).find('.epx').text().trim();
+            const rating = $(el).find('.numscore').text().trim();
+            
+            list.push({
+                id,
+                title,
+                image_url: thumbnail,
+                latest_episode: episode.replace('Ep ', '').replace('Episode ', ''),
+                rating,
+                type: 'anime',
+                date_created: new Date().toISOString()
+            });
+        });
+        const hasNextPage = $('.pagination .next').length > 0;
+        return { status: 'success', data: { data: list, hasNextPage } };
+    } catch (error) {
+        console.error('scrapeSeasonDetail error:', error);
+        throw error;
+    }
+};
 

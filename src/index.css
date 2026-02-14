@@ -2,140 +2,117 @@
 
 @layer base {
   :root {
-    --neo-yellow: #F4D738;
-    --neo-purple: #A388EE;
-    --neo-mint: #2AD184;
-    --neo-coral: #FF5C5C;
-    --neo-white: #F0F0F0;
+    --primary: #00cc4c; /* iQIYI Green */
+    --primary-hover: #00b342;
+    --accent: #FFD700; /* Gold */
+    --bg-dark: #050505;
+    --bg-card: #121212;
+    --bg-card-hover: #1a1a1a;
+    --text-main: #FFFFFF;
+    --text-muted: #999999;
+    --border-subtle: rgba(255, 255, 255, 0.05);
   }
 
   body {
-    font-family: 'Macondo', sans-serif;
-    background-color: #0c0c0c;
-    background-image: 
-      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      radial-gradient(circle at 15% 50%, rgba(163, 136, 238, 0.1), transparent 25%), 
-      radial-gradient(circle at 85% 30%, rgba(244, 215, 56, 0.1), transparent 25%), 
-      radial-gradient(circle at 50% 80%, rgba(42, 209, 132, 0.1), transparent 25%);
-    background-size: 60px 60px, 60px 60px, 100vw 100vh, 100vw 100vh, 100vw 100vh;
-    background-attachment: fixed;
-    color: white;
+    font-family: 'Josefin Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
     -webkit-font-smoothing: antialiased;
   }
   
   h1, h2, h3, .heading-font {
-    font-family: 'Share Tech', cursive;
-    text-transform: uppercase;
-    /* line-height: 1.2; */
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
 
-  .mono {
-    font-family: 'Space Mono', monospace;
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
   }
 
   * {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='white' stroke='black' stroke-width='2'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z'/%3E%3C/svg%3E"), auto !important;
+    cursor: default !important;
   }
   
   a, button, [role="button"], input[type="submit"], select, .cursor-pointer {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23FFCC00' stroke='black' stroke-width='2'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z'/%3E%3C/svg%3E"), pointer !important;
-  }
-  
-  a:active, button:active {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23FF3B30' stroke='black' stroke-width='2'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z'/%3E%3C/svg%3E"), pointer !important;
+    cursor: pointer !important;
   }
 }
 
 @layer components {
-  .animate-reveal {
-    animation: reveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0;
+  .iq-btn-primary {
+    @apply bg-[var(--primary)] text-white font-bold py-2 px-6 rounded-full transition-all hover:bg-[var(--primary-hover)] hover:scale-105 active:scale-95;
+  }
+  
+  .iq-btn-secondary {
+    @apply bg-white/10 backdrop-blur-md text-white font-bold py-2 px-6 rounded-full transition-all hover:bg-white/20 active:scale-95;
+  }
+
+  .glass-nav {
+    @apply bg-black/60 backdrop-blur-xl border-b border-white/5;
+  }
+
+  .hero-gradient {
+    background: linear-gradient(to top, var(--bg-dark) 0%, transparent 100%);
+  }
+  
+  .hero-gradient-side {
+    background: linear-gradient(to right, var(--bg-dark) 0%, transparent 50%);
   }
 
   @keyframes reveal {
     from {
       opacity: 0;
-      transform: translateY(20px) scale(0.95);
+      transform: translateY(12px);
     }
     to {
       opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  @keyframes peek-in {
-    0% {
-      opacity: 0;
-      transform: translate(-50%, 100%) scale(0.9);
-    }
-    70% {
-      opacity: 1;
-      transform: translate(-50%, -55%) scale(1.05);
-    }
-    100% {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-    }
-  }
-
-  .animate-peek {
-    animation: peek-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  }
-
-  @keyframes slide-up {
-    from {
-      transform: translateY(100%);
-    }
-    to {
       transform: translateY(0);
     }
   }
 
-  .animate-slide-up {
-    animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  .animate-reveal {
+    animation: reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  @keyframes marquee {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-50%);
-    }
+  @keyframes progress-loading {
+    0% { width: 0%; left: 0%; }
+    50% { width: 100%; left: 0%; }
+    100% { width: 0%; left: 100%; }
   }
 
-  .animate-marquee {
-    animation: marquee 30s linear infinite;
-  }
-  
-  .neo-shadow {
-    box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
-  }
-  .neo-shadow-lg {
-    box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
-  }
-  .neo-border {
-    border: 4px solid black;
-  }
-  .neo-btn-red {
-    background-color: #FF3B30;
-    border: 3px solid black;
-    box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
-  }
-  .neo-btn-yellow {
-    background-color: #FFCC00;
-    color: black;
-    border: 3px solid black;
-    box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+  @keyframes character-run {
+    0% { left: 0%; transform: scaleX(1); }
+    50% { left: calc(100% - 4rem); transform: scaleX(1); }
+    51% { transform: scaleX(-1); left: calc(100% - 4rem); }
+    100% { left: 0%; transform: scaleX(-1); }
   }
 
-  /* Custom Range Input */
-  input[type="range"]::-webkit-slider-thumb {
-    @apply appearance-none w-4 h-4 bg-black border-2 border-white cursor-pointer;
+  @keyframes running-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
   }
-  
-  input[type="range"]::-moz-range-thumb {
-    @apply w-4 h-4 bg-black border-2 border-white cursor-pointer;
+
+  .animate-progress-loading {
+    animation: progress-loading 3s ease-in-out infinite;
+  }
+
+  .animate-character-run {
+    animation: character-run 6s linear infinite;
+  }
+
+  .animate-running-bounce {
+    animation: running-bounce 0.4s ease-in-out infinite;
   }
 }

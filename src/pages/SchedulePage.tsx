@@ -27,33 +27,40 @@ const SchedulePage = () => {
     };
 
     fetchSchedule();
+    window.scrollTo(0, 0);
   }, []);
 
-  if (loading) return <Loader message="SYNCING SCHEDULE..." />;
+  if (loading) return <Loader message="Memuat jadwal rilis..." />;
 
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-12">
-      <h1 className="text-4xl md:text-7xl text-center font-black oswald text-white italic relative z-10 mb-12">
-        <span className="bg-[#FFCC00] text-black px-4 transform -rotate-2 inline-block border-4 border-black shadow-[8px_8px_0px_0px_white]">WEEKLY SCHEDULE</span>
-      </h1>
+    <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-12 pb-20">
+      <header className="space-y-4 pt-8">
+        <h1 className="text-3xl md:text-5xl font-bold text-white flex items-center gap-3">
+          <span className="w-1.5 h-10 bg-[var(--primary)] rounded-full"></span>
+          Jadwal Rilis
+        </h1>
+        <p className="text-white/40 text-sm md:text-base font-medium">Jadwal update episode anime terbaru setiap harinya.</p>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {schedule.map((day, idx) => (
-          <div key={day.day} className="bg-white h-[500px] border-8 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] flex flex-col">
-            <h2 className="text-3xl font-black oswald bg-black text-white p-4 text-center uppercase tracking-wider border-b-8 border-black">
-              {day.day}
-            </h2>
-            <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {schedule.map((day) => (
+          <div key={day.day} className="bg-white/5 rounded-2xl overflow-hidden border border-white/5 flex flex-col h-[600px]">
+            <div className="bg-white/5 p-4 border-b border-white/5">
+              <h2 className="text-lg font-bold text-[var(--primary)] uppercase tracking-wider text-center">
+                {day.day}
+              </h2>
+            </div>
+            <div className="p-3 space-y-3 flex-1 overflow-y-auto custom-scrollbar">
               {day.anime_list.map((anime) => (
                 <div 
                   key={anime.slug}
                   onClick={() => navigate(`/detail/${anime.slug}`)}
-                  className="group cursor-pointer flex items-center gap-3 border-4 border-black p-2 hover:bg-[#FFCC00] transition-all transform hover:-translate-y-1 active:translate-y-0 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none"
+                  className="group cursor-pointer flex items-center gap-3 p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-transparent hover:border-[var(--primary)]/20 transition-all"
                 >
-                   <div className="w-12 h-16 shrink-0 border-2 border-black overflow-hidden bg-black">
-                      <img src={anime.poster} alt={anime.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                   <div className="w-12 h-16 shrink-0 rounded-lg overflow-hidden bg-black border border-white/10 shadow-lg">
+                      <img src={anime.poster} alt={anime.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                    </div>
-                   <p className="font-bold text-black text-xs md:text-sm line-clamp-2 leading-tight uppercase group-hover:text-black">
+                   <p className="font-semibold text-white/80 text-xs line-clamp-2 leading-snug group-hover:text-[var(--primary)] transition-colors">
                      {anime.title}
                    </p>
                 </div>

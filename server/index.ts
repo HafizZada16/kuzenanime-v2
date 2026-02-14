@@ -14,7 +14,12 @@ import {
   scrapeSeriesList,
   scrapeSeriesListMode,
   scrapeMovieList,
-  scrapeDonghuaList 
+  scrapeDonghuaList,
+  scrapeTokusatsuList,
+  scrapeGenreList,
+  scrapeGenreDetail,
+  scrapeSeasonList,
+  scrapeSeasonDetail
 } from './scraper'
 
 const app = new Hono()
@@ -139,6 +144,16 @@ app.get('/api/animeplay/donghua', async (c) => {
     }
 })
 
+app.get('/api/animeplay/tokusatsu', async (c) => {
+    const page = c.req.query('page') || '1'
+    try {
+        const result = await scrapeTokusatsuList(page)
+        return c.json(result)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
 app.get('/api/animeplay/listanime', async (c) => {
     try {
         const data = await scrapeSeriesListMode()
@@ -166,6 +181,46 @@ app.get('/api/animeplay/listdonghua', async (c) => {
     }
 })
 
+app.get('/api/animeplay/listgenre', async (c) => {
+    try {
+        const data = await scrapeGenreList()
+        return c.json(data)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/listseason', async (c) => {
+    try {
+        const data = await scrapeSeasonList()
+        return c.json(data)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/season/:id', async (c) => {
+    const id = c.req.param('id')
+    const page = c.req.query('page') || '1'
+    try {
+        const result = await scrapeSeasonDetail(id, page)
+        return c.json(result)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/genre/:id', async (c) => {
+    const id = c.req.param('id')
+    const page = c.req.query('page') || '1'
+    try {
+        const result = await scrapeGenreDetail(id, page)
+        return c.json(result)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
 app.get('/api/animeplay/movies', async (c) => {
     const page = c.req.query('page') || '1'
     try {
@@ -187,8 +242,9 @@ app.get('/api/animeplay/schedule', async (c) => {
 
 app.get('/api/animeplay/search', async (c) => {
     const query = c.req.query('q') || ''
+    const page = c.req.query('page') || '1'
     try {
-        const data = await scrapeSearch(query)
+        const data = await scrapeSearch(query, page)
         return c.json(data)
     } catch (e) {
         return c.json({ error: String(e) }, 500)

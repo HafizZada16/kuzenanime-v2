@@ -1,38 +1,47 @@
 import React from 'react';
 import { useFavorites } from '../hooks/useFavorites';
 import AnimeCard from '../components/AnimeCard';
-import Button from '../components/Button';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHeart } from '@fortawesome/free-solid-svg-icons';
 
 const FavoritesPage = () => {
   const { favorites } = useFavorites();
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-12 min-h-[60vh]">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b-8 border-black pb-8">
-        <div className="bg-[#FF3B30] text-white px-6 py-3 border-4 border-black shadow-[8px_8px_0px_0px_black] transform -rotate-1">
-          <h1 className="text-4xl md:text-6xl font-black oswald italic uppercase">My Intel List</h1>
-        </div>
-        <Button variant="black" onClick={() => navigate('/')}>← BACK TO BASE</Button>
-      </div>
+    <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-12 pb-20 min-h-[70vh]">
+      <header className="space-y-4 pt-8">
+        <h1 className="text-3xl md:text-5xl font-bold text-white flex items-center gap-3">
+          <span className="w-1.5 h-10 bg-[var(--primary)] rounded-full"></span>
+          Koleksi Saya
+        </h1>
+        <p className="text-white/40 text-sm md:text-base font-medium">Daftar anime yang telah Anda simpan untuk ditonton nanti.</p>
+      </header>
 
       {favorites.length === 0 ? (
-        <div className="bg-white border-8 border-black p-12 text-center shadow-[16px_16px_0px_0px_#FFCC00] transform rotate-1">
-          <h2 className="text-3xl md:text-5xl font-black oswald text-black mb-4 uppercase">Your list is empty</h2>
-          <p className="font-bold text-gray-500 mb-8 uppercase tracking-widest">// NO BOOKMARKED ANIME DETECTED //</p>
-          <Button variant="yellow" onClick={() => navigate('/')}>EXPLORE ANIME</Button>
+        <div className="flex flex-col items-center justify-center py-32 rounded-3xl bg-white/5 border border-dashed border-white/10 text-center px-4">
+          <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-white/20 mb-6">
+            <FontAwesomeIcon icon={faHeart} size="2x" />
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold text-white/60 mb-2">Koleksi Anda masih kosong</h2>
+          <p className="text-white/30 text-sm max-w-md mb-10">Belum ada anime yang ditambahkan. Jelajahi katalog kami dan simpan anime favorit Anda di sini.</p>
+          <button 
+            onClick={() => navigate('/')}
+            className="iq-btn-primary"
+          >
+            Mulai Jelajah
+          </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-10">
-          {favorites.map(anime => (
-            <AnimeCard key={anime.id} anime={anime} />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+          {favorites.map((anime, index) => (
+            <div key={anime.id} className="animate-reveal" style={{ animationDelay: `${index * 0.05}s` }}>
+              <AnimeCard anime={anime} />
+            </div>
           ))}
         </div>
       )}
-      
-      {/* Decorative footer element for the page */}
-      <div className="h-4 bg-[repeating-linear-gradient(90deg,#FFCC00,#FFCC00_20px,#000_20px,#000_40px)] opacity-30 border-y-2 border-black"></div>
     </div>
   );
 };
