@@ -4,10 +4,10 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "concurrently \"vite\" \"tsx server/index.ts --watch\"",
+        "dev": "concurrently \"vite\" \"tsx server/standalone.ts --watch\"",
         "build": "vite build",
         "preview": "vite preview",
-        "server": "tsx server/index.ts"
+        "server": "tsx server/standalone.ts"
     },
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^7.2.0",

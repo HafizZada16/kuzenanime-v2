@@ -282,11 +282,3 @@ app.all('/api/sanka/*', async (c) => {
 })
 
 export default app
-
-const port = 3051
-console.log(`Server is running on port ${port}`)
-
-serve({
-  fetch: app.fetch,
-  port
-})
