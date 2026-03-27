@@ -152,7 +152,7 @@ const ContextMenu = () => {
           </h1>
           <div className="bg-white border-4 border-black p-4 mb-8 transform rotate-1">
             <p className="text-black font-black oswald text-xl md:text-2xl uppercase">
-              Developer tools detected. Please close them to continue browsing Kanatanime V3.
+              Developer tools detected. Please close them to continue browsing KuzenAnime V2.
             </p>
           </div>
           <div className="flex justify-center gap-4">
@@ -206,7 +206,7 @@ const ContextMenu = () => {
         ))}
       </ul>
       <div className="border-t-4 border-black p-2 text-[10px] bg-black text-white text-center">
-        © KANATANIME V3
+        © KUZENANIME V2
       </div>
     </div>
   );

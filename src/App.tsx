@@ -49,7 +49,7 @@ export default function App() {
       year: item.year || new Date().getFullYear(),
       rating: item.rating ? parseFloat(item.rating) : 0,
       genre: item.genre || ['Anime'], 
-      synopsis: item.synopsis || `Watch ${item.title} on KANATA.`,
+      synopsis: item.synopsis || `Watch ${item.title} on KuzenAnime V2.`,
       likes: '0',
       type: item.type
     }));
@@ -136,7 +136,7 @@ export default function App() {
                 <div className="w-10 h-10 bg-[var(--primary)] rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20 group-hover:rotate-12 transition-transform duration-300">
                   <span className="text-white font-black italic text-2xl">K</span>
                 </div>
-                <span className="text-white font-black italic tracking-tighter text-2xl group-hover:text-[var(--primary)] transition-colors">KANATA</span>
+                <span className="text-white font-black italic tracking-tighter text-2xl group-hover:text-[var(--primary)] transition-colors">KUZEN ANIME</span>
               </Link>
               <p className="text-sm text-white/40 leading-relaxed max-w-xs">
                 Platform streaming anime paling imersif dengan koleksi terlengkap dan kualitas terbaik. Dibuat oleh fans, untuk fans.
@@ -218,7 +218,7 @@ export default function App() {
               <div className="space-y-4">
                 <h5 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Disclaimer</h5>
                 <p className="text-[11px] text-white/30 leading-relaxed text-justify">
-                  Kanatanime adalah platform agregator konten yang melakukan crawling data secara otomatis. Kami TIDAK menyimpan, menghosting, atau mengunggah file video apa pun ke server kami. Seluruh konten disediakan oleh pihak ketiga yang tidak memiliki hubungan kerjasama dengan kami. Kami tidak bertanggung jawab atas legalitas atau keakuratan isi konten tersebut.
+                  KuzenAnime V2 adalah platform agregator konten yang melakukan crawling data secara otomatis. Kami TIDAK menyimpan, menghosting, atau mengunggah file video apa pun ke server kami. Seluruh konten disediakan oleh pihak ketiga yang tidak memiliki hubungan kerjasama dengan kami. Kami tidak bertanggung jawab atas legalitas atau keakuratan isi konten tersebut.
                 </p>
               </div>
               <div className="space-y-4">
@@ -230,7 +230,7 @@ export default function App() {
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">
-              <p>© 2023 - {new Date().getFullYear()} KANATANIME V3 • BEYOND STREAMING</p>
+              <p>© 2023 - {new Date().getFullYear()} KUZENANIME V2 • BEYOND STREAMING</p>
               <div className="flex gap-8">
                 <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
                 <a href="#" className="hover:text-white transition-colors">Terms of Service</a>

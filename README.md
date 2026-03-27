@@ -1,4 +1,4 @@
-# KANATA - Kanatanime V3
+# KuzenAnime V2
 
 Platform agregator anime streaming dengan antarmuka modern bergaya premium dark-theme. Dibangun menggunakan React + Hono dengan arsitektur fullstack monorepo.
 
@@ -111,4 +111,4 @@ docker compose up --build
 
 ## Disclaimer
 
-Kanatanime adalah platform agregator konten yang melakukan crawling data secara otomatis. Kami **tidak** menyimpan, menghosting, atau mengunggah file video apa pun ke server kami.
+KuzenAnime adalah platform agregator konten yang melakukan crawling data secara otomatis. Kami **tidak** menyimpan, menghosting, atau mengunggah file video apa pun ke server kami.

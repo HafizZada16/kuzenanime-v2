@@ -64,7 +64,7 @@ const Navbar = () => {
               <span className="text-white text-xl font-black italic leading-none translate-x-[-1px]">K</span>
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-white font-black italic tracking-tighter text-xl group-hover:text-[var(--primary)] transition-colors">KANATA</span>
+              <span className="text-white font-black italic tracking-tighter text-xl group-hover:text-[var(--primary)] transition-colors">KUZEN ANIME</span>
               <span className="text-[var(--primary)] font-bold text-[8px] tracking-[0.3em] ml-0.5">STREAMING</span>
             </div>
           </Link>

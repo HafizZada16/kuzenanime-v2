@@ -11,12 +11,12 @@ interface SEOProps {
 
 const SEO: React.FC<SEOProps> = ({ 
   title, 
-  description = "Nonton Anime Subtitle Indonesia dengan kualitas HD terbaik dan server tercepat. Streaming anime gratis tanpa gangguan hanya di KANATA V3.", 
+  description = "Nonton Anime Subtitle Indonesia dengan kualitas HD terbaik dan server tercepat. Streaming anime gratis tanpa gangguan hanya di KuzenAnime V2.", 
   image = "/icon.svg", 
   url = window.location.href,
   type = "website"
 }) => {
-  const siteTitle = `${title} | KANATANIME V3`;
+  const siteTitle = `${title} | KuzenAnime V2`;
 
   return (
     <Helmet>

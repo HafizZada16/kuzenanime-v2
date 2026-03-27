@@ -281,6 +281,8 @@ app.all('/api/sanka/*', async (c) => {
   return proxyRequest(c, targetUrl)
 })
 
+export default app
+
 const port = 3051
 console.log(`Server is running on port ${port}`)
 

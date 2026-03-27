@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kanata-v3-cache-v1';
+const CACHE_NAME = 'kuzenanime-v2-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',

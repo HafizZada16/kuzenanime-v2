@@ -25,7 +25,7 @@ const TokusatsuPage = () => {
       year: item.date_created ? new Date(item.date_created).getFullYear() : 2026,
       rating: item.rating ? parseFloat(item.rating) : 0,
       genre: ['Tokusatsu'],
-      synopsis: `Watch ${item.title} on Kanatanime V3.`,
+      synopsis: `Watch ${item.title} on KuzenAnime V2.`,
       likes: '0'
     }));
   };

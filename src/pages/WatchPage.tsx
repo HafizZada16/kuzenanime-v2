@@ -191,7 +191,7 @@ const WatchPage = () => {
       {animeDetail && currentEpisode && (
         <SEO 
           title={`Nonton ${animeDetail.title} ${currentEpisode.title}`}
-          description={`Streaming ${animeDetail.title} ${currentEpisode.title} Subtitle Indonesia gratis dengan kualitas HD di KANATA V3.`}
+          description={`Streaming ${animeDetail.title} ${currentEpisode.title} Subtitle Indonesia gratis dengan kualitas HD di KuzenAnime V2.`}
           image={animeDetail.banner || animeDetail.thumbnail}
           type="video.episode"
         />
