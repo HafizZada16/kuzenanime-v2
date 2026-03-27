@@ -1,5 +1,10 @@
+import { Hono } from 'hono'
 import { handle } from 'hono/vercel'
-import app from '../server/index'
+
+const app = new Hono().basePath('/api')
+
+app.get('/', (c) => c.json({ message: 'API is working!' }))
+app.get('/test', (c) => c.json({ status: 'success' }))
 
 export const GET = handle(app)
 export const POST = handle(app)
