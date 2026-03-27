@@ -1,11 +1,8 @@
-import { Hono } from 'hono'
 import { handle } from 'hono/vercel'
+import app from '../server/index'
 
-const app = new Hono().basePath('/api')
-
-app.get('/', (c) => c.json({ message: 'API is working!' }))
-app.get('/test', (c) => c.json({ status: 'success' }))
-
+// The original app already has /api prefix in its routes, 
+// so we don't need .basePath('/api') here.
 export const GET = handle(app)
 export const POST = handle(app)
 export const PUT = handle(app)
