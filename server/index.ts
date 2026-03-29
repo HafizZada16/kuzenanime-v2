@@ -91,6 +91,10 @@ app.get('/', (c) => {
   return c.text('Anime Proxy Server is running!')
 })
 
+app.get('/api', (c) => {
+  return c.text('KuzenAnime V2 API is ready!')
+})
+
 // Scraper Routes
 app.get('/api/animeplay/home', async (c) => {
     try {
