@@ -1,8 +1,12 @@
 import { handle } from 'hono/vercel'
 import app from '../server/index'
 
-// The original app already has /api prefix in its routes, 
-// so we don't need .basePath('/api') here.
+// Error logging for Vercel
+app.onError((err, c) => {
+  console.error(`[API Error]: ${err.message}`, err.stack)
+  return c.json({ error: 'Internal Server Error', message: err.message }, 500)
+})
+
 export const GET = handle(app)
 export const POST = handle(app)
 export const PUT = handle(app)
