@@ -1,5 +1,3 @@
-
-import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 const BASE_URL = 'https://v6.animekompi.fun';
@@ -8,9 +6,6 @@ const headers = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
 };
-
-// Default axios config with timeout
-axios.defaults.timeout = 8000; 
 
 const cleanTitle = (title: string) => {
     return title.replace(/[\t\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -23,7 +18,8 @@ const getThumbnail = ($el: cheerio.Cheerio<any>) => {
 
 export const scrapeHome = async () => {
   try {
-    const { data } = await axios.get(BASE_URL, { headers });
+    const res = await fetch(BASE_URL, { headers });
+    const data = await res.text();
     const $ = cheerio.load(data);
     
     // 1. Latest Episodes (Rilisan Terbaru)
@@ -84,8 +80,9 @@ export const scrapeHome = async () => {
     if (newSeries.length === 0) {
         // Scrape from Movie page as fallback for cinematic content
         try {
-            const mRes = await axios.get(`${BASE_URL}/movie/`, { headers });
-            const $m = cheerio.load(mRes.data);
+            const mRes = await fetch(`${BASE_URL}/movie/`, { headers });
+            const mData = await mRes.text();
+            const $m = cheerio.load(mData);
             $m('.listupd .bs').slice(0, 10).each((i, el) => {
                 const title = cleanTitle($m(el).find('.tt').text());
                 const id = ($m(el).find('a').attr('href') || '').split('/').filter(Boolean).pop() || '';
@@ -121,9 +118,10 @@ export const scrapeHome = async () => {
   }
 };
 
-export const scrapeAnimeList = async (params: string = '') => {
+export const scrapeAnimeList = async (query: string) => {
     try {
-        const { data } = await axios.get(`${BASE_URL}/anime/${params}`, { headers });
+        const res = await fetch(`${BASE_URL}/anime/${query}`, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const list: any[] = [];
         $('.listupd .bs').each((i, el) => {
@@ -155,7 +153,8 @@ export const scrapeAnimeList = async (params: string = '') => {
 export const scrapeSearch = async (query: string, page: string = '1') => {
     try {
         const url = page === '1' ? `${BASE_URL}/?s=${encodeURIComponent(query)}` : `${BASE_URL}/page/${page}/?s=${encodeURIComponent(query)}`;
-        const { data } = await axios.get(url, { headers });
+        const res = await fetch(url, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const list: any[] = [];
         $('.listupd .bs').each((i, el) => {
@@ -181,7 +180,8 @@ export const scrapeSearch = async (query: string, page: string = '1') => {
 
 const getAnimeSlugFromEpisode = async (episodeSlug: string) => {
     try {
-        const { data } = await axios.get(`${BASE_URL}/${episodeSlug}/`, { headers });
+        const res = await fetch(`${BASE_URL}/${episodeSlug}/`, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const animeUrl = $('.nvs.nvsc a').attr('href') || '';
         return animeUrl.split('/').filter(Boolean).pop() || '';
@@ -193,26 +193,24 @@ const getAnimeSlugFromEpisode = async (episodeSlug: string) => {
 export const scrapeDetail = async (slug: string) => {
     try {
         let currentSlug = slug;
-        let response;
+        let responseData;
         
         try {
-            response = await axios.get(`${BASE_URL}/anime/${currentSlug}/`, { headers });
+            const res = await fetch(`${BASE_URL}/anime/${currentSlug}/`, { headers });
+            if (!res.ok) throw new Error('404');
+            responseData = await res.text();
         } catch (err: any) {
-            if (err.response?.status === 404) {
-                // If 404, maybe it's an episode slug
-                const actualAnimeSlug = await getAnimeSlugFromEpisode(slug);
-                if (actualAnimeSlug && actualAnimeSlug !== slug) {
-                    currentSlug = actualAnimeSlug;
-                    response = await axios.get(`${BASE_URL}/anime/${currentSlug}/`, { headers });
-                } else {
-                    throw err;
-                }
+            const actualAnimeSlug = await getAnimeSlugFromEpisode(slug);
+            if (actualAnimeSlug && actualAnimeSlug !== slug) {
+                currentSlug = actualAnimeSlug;
+                const res = await fetch(`${BASE_URL}/anime/${currentSlug}/`, { headers });
+                responseData = await res.text();
             } else {
                 throw err;
             }
         }
 
-        const $ = cheerio.load(response.data);
+        const $ = cheerio.load(responseData);
         
         const title = cleanTitle($('.entry-title').text());
         const thumbnail = getThumbnail($('.thumb'));
@@ -298,7 +296,8 @@ export const scrapeDetail = async (slug: string) => {
 
 export const scrapeWatch = async (episodeSlug: string) => {
     try {
-        const { data } = await axios.get(`${BASE_URL}/${episodeSlug}/`, { headers });
+        const res = await fetch(`${BASE_URL}/${episodeSlug}/`, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         
         const title = $('.entry-title').text().trim();
@@ -402,7 +401,8 @@ export const scrapeWatch = async (episodeSlug: string) => {
 
 export const scrapeSchedule = async () => {
     try {
-        const { data } = await axios.get(`${BASE_URL}/jadwal-rilis/`, { headers });
+        const res = await fetch(`${BASE_URL}/jadwal-rilis/`, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const schedule: any[] = [];
         
@@ -458,7 +458,8 @@ export const scrapeSeriesList = async (type: string = '') => {
 
 export const scrapeSeriesListMode = async () => {
     try {
-        const { data } = await axios.get(`${BASE_URL}/anime/list-mode/`, { headers });
+        const res = await fetch(`${BASE_URL}/anime/?list`, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const result: any[] = [];
 
@@ -486,7 +487,8 @@ export const scrapeSeriesListMode = async () => {
 export const scrapeMovieList = async (page: string = '1') => {
     try {
         const url = page === '1' ? `${BASE_URL}/movie/` : `${BASE_URL}/movie/page/${page}/`;
-        const { data } = await axios.get(url, { headers });
+        const res = await fetch(url, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const list: any[] = [];
         
@@ -516,8 +518,9 @@ export const scrapeMovieList = async (page: string = '1') => {
 
 export const scrapeDonghuaList = async (page: string = '1') => {
     try {
-        const url = page === '1' ? `${BASE_URL}/genres/donghua/` : `${BASE_URL}/genres/donghua/page/${page}/`;
-        const { data } = await axios.get(url, { headers });
+        const url = page === '1' ? `${BASE_URL}/type/donghua/` : `${BASE_URL}/type/donghua/page/${page}/`;
+        const res = await fetch(url, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const list: any[] = [];
         
@@ -547,8 +550,9 @@ export const scrapeDonghuaList = async (page: string = '1') => {
 
 export const scrapeTokusatsuList = async (page: string = '1') => {
     try {
-        const url = page === '1' ? `${BASE_URL}/genres/tokusatsu/` : `${BASE_URL}/genres/tokusatsu/page/${page}/`;
-        const { data } = await axios.get(url, { headers });
+        const url = page === '1' ? `${BASE_URL}/type/tokusatsu/` : `${BASE_URL}/type/tokusatsu/page/${page}/`;
+        const res = await fetch(url, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const list: any[] = [];
         
@@ -578,7 +582,8 @@ export const scrapeTokusatsuList = async (page: string = '1') => {
 
 export const scrapeGenreList = async () => {
     try {
-        const { data } = await axios.get(`${BASE_URL}/genres/`, { headers });
+        const res = await fetch(`${BASE_URL}/genres/`, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const genres: any[] = [];
         $('.taxindex li a').each((i, el) => {
@@ -599,7 +604,8 @@ export const scrapeGenreList = async () => {
 export const scrapeGenreDetail = async (genreId: string, page: string = '1') => {
     try {
         const url = page === '1' ? `${BASE_URL}/genres/${genreId}/` : `${BASE_URL}/genres/${genreId}/page/${page}/`;
-        const { data } = await axios.get(url, { headers });
+        const res = await fetch(url, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const list: any[] = [];
         $('.listupd .bs').each((i, el) => {
@@ -630,7 +636,8 @@ export const scrapeGenreDetail = async (genreId: string, page: string = '1') => 
 
 export const scrapeSeasonList = async () => {
     try {
-        const { data } = await axios.get(`${BASE_URL}/season/`, { headers });
+        const res = await fetch(`${BASE_URL}/season/`, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const seasons: any[] = [];
         $('.taxindex li a').each((i, el) => {
@@ -651,7 +658,8 @@ export const scrapeSeasonList = async () => {
 export const scrapeSeasonDetail = async (seasonId: string, page: string = '1') => {
     try {
         const url = page === '1' ? `${BASE_URL}/season/${seasonId}/` : `${BASE_URL}/season/${seasonId}/page/${page}/`;
-        const { data } = await axios.get(url, { headers });
+        const res = await fetch(url, { headers });
+        const data = await res.text();
         const $ = cheerio.load(data);
         const list: any[] = [];
         $('.listupd .bs').each((i, el) => {

@@ -22,15 +22,13 @@ import {
 
 const app = new Hono()
 
-// app.use('*', cors())
+app.use('*', cors())
+app.use('*', logger())
 app.use('*', async (c, next) => {
-  const forwarded = c.req.header('x-forwarded-for')
-  const realIp = c.req.header('x-real-ip')
-  const ip = forwarded ? forwarded.split(',')[0].trim() : realIp || 'unknown'
+  const ip = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
   console.log(`[request] ip=${ip} method=${c.req.method} path=${c.req.path}`)
   await next()
 })
-// app.use('*', logger())
 
 const SANKA_BASE_URL = 'https://www.sankavollerei.com/anime'
 const RYZUMI_BASE_URL = 'https://backend.ryzumi.vip/anime'
