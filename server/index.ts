@@ -18,7 +18,7 @@ import {
   scrapeGenreDetail,
   scrapeSeasonList,
   scrapeSeasonDetail
-} from './scraper'
+} from './scraper.js'
 
 const app = new Hono()
 
