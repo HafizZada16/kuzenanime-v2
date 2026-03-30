@@ -2,8 +2,8 @@
 
 @layer base {
   :root {
-    --primary: #00cc4c; /* iQIYI Green */
-    --primary-hover: #00b342;
+    --primary: #0ea5e9; /* Sky Blue */
+    --primary-hover: #0284c7;
     --accent: #FFD700; /* Gold */
     --bg-dark: #050505;
     --bg-card: #121212;

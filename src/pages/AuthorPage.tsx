@@ -150,7 +150,7 @@ const AuthorPage = () => {
               "Platform streaming anime yang dikembangkan dengan ❤️ untuk memberikan pengalaman menonton terbaik tanpa gangguan bagi seluruh penggemar anime di Indonesia."
             </p>
             <div className="pt-4">
-              <div className="inline-flex items-center gap-3 px-6 py-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full text-lg font-bold border border-[var(--primary)]/20 shadow-lg shadow-green-500/10">
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full text-lg font-bold border border-[var(--primary)]/20 shadow-lg shadow-sky-500/10">
                 <span className="w-2 h-2 bg-[var(--primary)] rounded-full animate-pulse"></span>
                 Powered by AntiDonasi Team
               </div>

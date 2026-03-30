@@ -133,7 +133,7 @@ export default function App() {
             {/* Brand Section */}
             <div className="space-y-6">
               <Link to="/" className="flex items-center gap-2 group">
-                <div className="w-10 h-10 bg-[var(--primary)] rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20 group-hover:rotate-12 transition-transform duration-300">
+                <div className="w-10 h-10 bg-[var(--primary)] rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20 group-hover:rotate-12 transition-transform duration-300">
                   <span className="text-white font-black italic text-2xl">K</span>
                 </div>
                 <span className="text-white font-black italic tracking-tighter text-2xl group-hover:text-[var(--primary)] transition-colors">KUZEN ANIME</span>

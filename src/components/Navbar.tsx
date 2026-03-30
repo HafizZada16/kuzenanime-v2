@@ -60,7 +60,7 @@ const Navbar = () => {
             to="/"
             className="group flex items-center gap-2.5 shrink-0"
           >
-            <div className="w-9 h-9 bg-gradient-to-br from-[var(--primary)] to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+            <div className="w-9 h-9 bg-gradient-to-br from-[var(--primary)] to-sky-600 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
               <span className="text-white text-xl font-black italic leading-none translate-x-[-1px]">K</span>
             </div>
             <div className="flex flex-col leading-none">
