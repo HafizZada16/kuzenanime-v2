@@ -29,7 +29,7 @@ const SocialMediaPopup = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-40 flex items-center justify-center px-4 pt-16 md:pt-0">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300 animate-reveal"
