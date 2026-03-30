@@ -331,7 +331,7 @@ const WatchPage = () => {
           <div className="bg-white/5 rounded-2xl p-6 md:p-8 space-y-6">
             <div>
                <h1 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight">
-                 {animeDetail?.title} - {currentEpisode?.title}
+                 {currentEpisode?.title}
                </h1>
                <div className="flex items-center gap-3 text-white/40 text-xs">
                   <span className="text-yellow-400 font-bold">★ {animeDetail?.rating}</span>
