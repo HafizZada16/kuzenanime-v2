@@ -2,7 +2,8 @@
 
 import { Anime, Episode } from './types';
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || '';
+const RAW_API_URL = import.meta.env.VITE_API_URL || '';
+const VITE_API_URL = RAW_API_URL.endsWith('/') ? RAW_API_URL.slice(0, -1) : RAW_API_URL;
 
 export const API_BASE_URL = `${VITE_API_URL}/api/sanka`;
 export const ANIMEPLAY_API_BASE_URL = `${VITE_API_URL}/api/animeplay`;
