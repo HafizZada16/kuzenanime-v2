@@ -22,11 +22,12 @@ root.render(
   </React.StrictMode>
 );
 
-// Register Service Worker for PWA
+// Unregister Service Worker to fix aggressive caching issues (white screen)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(err => {
-      console.log('SW registration failed: ', err);
-    });
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (let registration of registrations) {
+      registration.unregister();
+      console.log('Service Worker unregistered to prevent stale cache.');
+    }
   });
 }
