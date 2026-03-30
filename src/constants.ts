@@ -1,9 +1,12 @@
+/// <reference types="vite/client" />
 
 import { Anime, Episode } from './types';
 
-export const API_BASE_URL = '/api/sanka';
-export const ANIMEPLAY_API_BASE_URL = '/api/animeplay';
-export const STREAM_API_BASE_URL = '/api/ryzumi';
+const VITE_API_URL = import.meta.env.VITE_API_URL || '';
+
+export const API_BASE_URL = `${VITE_API_URL}/api/sanka`;
+export const ANIMEPLAY_API_BASE_URL = `${VITE_API_URL}/api/animeplay`;
+export const STREAM_API_BASE_URL = `${VITE_API_URL}/api/ryzumi`;
 
 export const MOCK_ANIME: Anime[] = [
   {
