@@ -1,7 +1,8 @@
-import app from '../server'
+import { handle } from 'hono/vercel'
+import app from '../server/index'
 
 export const config = {
-  runtime: 'edge'
+  runtime: 'nodejs'
 }
 
-export default app
+export default handle(app)
