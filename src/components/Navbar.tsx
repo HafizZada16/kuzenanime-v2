@@ -85,9 +85,12 @@ const Navbar = () => {
             ))}
 
             {/* Dropdown Kategori */}
-            <div className="relative ml-2">
+            <div 
+              className="relative ml-2"
+              onMouseEnter={() => setIsDropdownOpen(true)}
+              onMouseLeave={() => setIsDropdownOpen(false)}
+            >
                <button 
-                 onMouseEnter={() => setIsDropdownOpen(true)}
                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                  className={`px-4 py-2 rounded-full transition-all flex items-center gap-1 ${
                    categoryLinks.some(l => isActive(l.path)) ? 'text-[var(--primary)]' : 'text-white/80 hover:text-[var(--primary)]'
@@ -98,21 +101,20 @@ const Navbar = () => {
                </button>
 
                {isDropdownOpen && (
-                 <div 
-                   className="absolute top-full left-0 mt-2 w-48 bg-[#1a1a1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2 animate-in fade-in slide-in-from-top-2 duration-200"
-                   onMouseLeave={() => setIsDropdownOpen(false)}
-                 >
-                    {categoryLinks.map((item) => (
-                      <Link
-                        key={item.name}
-                        to={item.path}
-                        className={`block px-5 py-2.5 text-xs font-bold transition-colors ${
-                          isActive(item.path) ? 'text-[var(--primary)] bg-white/5' : 'text-white/60 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
+                 <div className="absolute top-full left-0 pt-2 w-48 z-50">
+                   <div className="bg-[#1a1a1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                      {categoryLinks.map((item) => (
+                        <Link
+                          key={item.name}
+                          to={item.path}
+                          className={`block px-5 py-2.5 text-xs font-bold transition-colors ${
+                            isActive(item.path) ? 'text-[var(--primary)] bg-white/5' : 'text-white/60 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {item.name}
+                        </Link>
+                      ))}
+                   </div>
                  </div>
                )}
             </div>
