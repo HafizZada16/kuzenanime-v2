@@ -7,6 +7,7 @@ import { Anime } from './types';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import OngoingPage from './pages/OngoingPage';
+import CompletePage from './pages/CompletePage';
 import MoviesPage from './pages/MoviesPage';
 import DonghuaPage from './pages/DonghuaPage';
 import SearchPage from './pages/SearchPage';
@@ -103,6 +104,7 @@ export default function App() {
             />
           } />
           <Route path="/ongoing" element={<OngoingPage />} />
+          <Route path="/complete" element={<CompletePage />} />
           <Route path="/tokusatsu" element={<TokusatsuPage />} />
           <Route path="/movies" element={<MoviesPage />} />
           <Route path="/donghua" element={<DonghuaPage />} />

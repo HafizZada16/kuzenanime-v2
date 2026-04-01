@@ -46,6 +46,7 @@ const Navbar = () => {
     const categoryLinks = [
         { name: "Semua Genre", path: "/genre" },
         { name: "Daftar Musim", path: "/season" },
+        { name: "Completed", path: "/complete" },
         { name: "Tokusatsu", path: "/tokusatsu" },
         { name: "Donghua", path: "/donghua" },
         { name: "Jadwal Rilis", path: "/schedule" },
