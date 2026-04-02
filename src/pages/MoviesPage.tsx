@@ -80,7 +80,7 @@ const MoviesPage = () => {
         <button 
           onClick={() => setPage(p => Math.max(1, p - 1))}
           disabled={page === 1}
-          className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 text-white/60 hover:bg-[var(--primary)] hover:text-white transition-all disabled:opacity-10 disabled:pointer-events-none"
+          className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 text-white/60 hover:bg-(--primary) hover:text-white transition-all disabled:opacity-10 disabled:pointer-events-none"
         >
           <FontAwesomeIcon icon={faChevronLeft} />
         </button>
@@ -93,7 +93,7 @@ const MoviesPage = () => {
         <button 
           onClick={() => setPage(p => p + 1)}
           disabled={!hasNextPage}
-          className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 text-white/60 hover:bg-[var(--primary)] hover:text-white transition-all disabled:opacity-10 disabled:pointer-events-none"
+          className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 text-white/60 hover:bg-(--primary) hover:text-white transition-all disabled:opacity-10 disabled:pointer-events-none"
         >
           <FontAwesomeIcon icon={faChevronRight} />
         </button>

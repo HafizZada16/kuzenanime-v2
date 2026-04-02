@@ -104,7 +104,7 @@ const AnimeDetail = () => {
           type="video.movie"
         />
       )}
-      {/* Immersive Header */}      <div className="relative w-full h-[75vh] md:h-[80vh] flex items-start lg:items-end">
+      {/* Immersive Header */}      <div className="relative w-full min-h-[75vh] h-auto md:h-[80vh] flex items-start lg:items-end">
         {/* Background Banner */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img 
