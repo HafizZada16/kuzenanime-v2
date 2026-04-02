@@ -21,7 +21,7 @@ const TokusatsuPage = () => {
       thumbnail: item.image_url || '',
       banner: item.image_url || '',
       episode: item.latest_episode ? `EP ${item.latest_episode}` : 'FULL',
-      status: 'TAMAT',
+      status: 'COMPLETED',
       year: item.date_created ? new Date(item.date_created).getFullYear() : 2026,
       rating: item.rating ? parseFloat(item.rating) : 0,
       genre: ['Tokusatsu'],

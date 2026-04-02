@@ -95,7 +95,7 @@ const AnimeDetail = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[var(--bg-dark)] -mt-28">
+    <div className="min-h-screen bg-(--bg-dark) -mt-20">
       {anime && (
         <SEO 
           title={anime.title}
@@ -104,7 +104,7 @@ const AnimeDetail = () => {
           type="video.movie"
         />
       )}
-      {/* Immersive Header */}      <div className="relative w-full h-[65vh] md:h-[80vh] flex items-end">
+      {/* Immersive Header */}      <div className="relative w-full h-[75vh] md:h-[80vh] flex items-start lg:items-end">
         {/* Background Banner */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img 
@@ -117,10 +117,10 @@ const AnimeDetail = () => {
         </div>
         
         {/* Content Overlay */}
-        <div className="relative z-10 w-full pb-12">
+        <div className="relative z-10 w-full pt-24 pb-12 md:pt-32">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
              <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-end text-center lg:text-left">
-                <div className="w-44 lg:w-52 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl shrink-0 border border-white/10 mx-auto lg:mx-0 bg-black/40">
+                <div className="w-44 lg:w-52 aspect-2/3 rounded-xl overflow-hidden shadow-2xl shrink-0 border border-white/10 mx-auto lg:mx-0 bg-black/40">
                    <img src={anime.thumbnail} className="w-full h-full object-cover" alt={anime.title} />
                 </div>
                 <div className="flex-1 space-y-4 w-full">
@@ -133,7 +133,7 @@ const AnimeDetail = () => {
                    </h1>
                    <div className="flex flex-wrap justify-center lg:justify-start gap-2">
                       {anime.genre.map((g, i) => (
-                        <span key={i} className="text-sm text-white/40 hover:text-[var(--primary)] cursor-default transition-colors">{g}{i < anime.genre.length - 1 ? ' • ' : ''}</span>
+                        <span key={i} className="text-sm text-white/40 hover:text-(--primary) cursor-default transition-colors">{g}{i < anime.genre.length - 1 ? ' • ' : ''}</span>
                       ))}
                    </div>
                    <div className="flex items-center justify-center lg:justify-start gap-4 pt-4">
@@ -146,7 +146,7 @@ const AnimeDetail = () => {
                       </button>
                       <button 
                         onClick={() => toggleFavorite(anime)}
-                        className={`iq-btn-secondary flex items-center gap-2 ${isFavorite(anime.id) ? 'text-[var(--primary)]' : ''}`}
+                        className={`iq-btn-secondary flex items-center gap-2 ${isFavorite(anime.id) ? 'text-(--primary)' : ''}`}
                       >
                         <FontAwesomeIcon icon={isFavorite(anime.id) ? faHeartCircleCheck : faHeartCirclePlus} />
                         {isFavorite(anime.id) ? 'Tersimpan':'Simpan'}
@@ -164,7 +164,7 @@ const AnimeDetail = () => {
           {/* Synopsis */}
           <section className="space-y-4">
              <h2 className="text-xl font-bold flex items-center gap-2">
-                <span className="w-1 h-5 bg-[var(--primary)] rounded-full"></span>
+                <span className="w-1 h-5 bg-(--primary) rounded-full"></span>
                 Sinopsis
              </h2>
              <p className="text-white/60 leading-relaxed text-sm md:text-base">
@@ -176,12 +176,12 @@ const AnimeDetail = () => {
           <section className="space-y-6">
              <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                   <span className="w-1 h-5 bg-[var(--primary)] rounded-full"></span>
+                   <span className="w-1 h-5 bg-(--primary) rounded-full"></span>
                    Daftar Episode
                 </h2>
                 <button 
                    onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
-                   className="text-sm text-white/40 hover:text-[var(--primary)] flex items-center gap-2"
+                   className="text-sm text-white/40 hover:text-(--primary) flex items-center gap-2"
                 >
                    {sortOrder === 'newest' ? 'Terbaru' : 'Terlama'}
                    <FontAwesomeIcon icon={faLayerGroup} className="text-xs" />
@@ -193,18 +193,18 @@ const AnimeDetail = () => {
                   <button 
                     key={ep.slug}
                     onClick={() => handleWatch(ep.slug)}
-                    className="flex items-center gap-4 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left group border border-transparent hover:border-[var(--primary)]/20"
+                    className="flex items-center gap-4 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left group border border-transparent hover:border-(--primary)/20"
                   >
-                    <div className="w-12 h-12 rounded flex items-center justify-center bg-[var(--primary)]/10 text-[var(--primary)] font-bold shrink-0">
+                    <div className="w-12 h-12 rounded flex items-center justify-center bg-(--primary)/10 text-(--primary) font-bold shrink-0">
                       {ep.episode}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-white/90 truncate group-hover:text-[var(--primary)] transition-colors">
+                      <h4 className="text-sm font-medium text-white/90 truncate group-hover:text-(--primary) transition-colors">
                         {ep.title.replace(anime.title, '').trim() || `Episode ${ep.episode}`}
                       </h4>
                       <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wider">{ep.date}</p>
                     </div>
-                    <FontAwesomeIcon icon={faPlay} className="text-[var(--primary)] opacity-0 group-hover:opacity-100 transition-opacity text-xs" />
+                    <FontAwesomeIcon icon={faPlay} className="text-(--primary) opacity-0 group-hover:opacity-100 transition-opacity text-xs" />
                   </button>
                 ))}
              </div>
@@ -250,10 +250,10 @@ const AnimeDetail = () => {
                         to={`/detail/${rel.animeId}`}
                         className="group space-y-2"
                        >
-                          <div className="aspect-[2/3] rounded-lg overflow-hidden bg-white/5">
+                          <div className="aspect-2/3 rounded-lg overflow-hidden bg-white/5">
                              <img src={rel.poster} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={rel.title} />
                           </div>
-                          <h4 className="text-[11px] font-medium line-clamp-2 text-white/70 group-hover:text-[var(--primary)] transition-colors">{rel.title}</h4>
+                          <h4 className="text-[11px] font-medium line-clamp-2 text-white/70 group-hover:text-(--primary) transition-colors">{rel.title}</h4>
                        </Link>
                     ))}
                  </div>

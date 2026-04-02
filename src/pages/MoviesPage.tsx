@@ -21,7 +21,7 @@ const MoviesPage = () => {
       thumbnail: item.image_url || '',
       banner: item.image_url || '',
       episode: item.latest_episode ? `EP ${item.latest_episode}` : 'MOVIE',
-      status: 'TAMAT',
+      status: 'COMPLETED',
       year: item.date_created ? new Date(item.date_created).getFullYear() : 2026,
       rating: item.rating ? parseFloat(item.rating) : 0,
       genre: ['Movie'],
@@ -59,7 +59,7 @@ const MoviesPage = () => {
     <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-12 pb-20">
       <header className="space-y-4 pt-8">
         <h1 className="text-3xl md:text-5xl font-bold text-white flex items-center gap-3">
-          <span className="w-1.5 h-10 bg-[var(--primary)] rounded-full"></span>
+          <span className="w-1.5 h-10 bg-(--primary) rounded-full"></span>
           Film Layar Lebar
         </h1>
         <p className="text-white/40 text-sm md:text-base font-medium">Nikmati koleksi film anime terbaik dengan kualitas HD.</p>
