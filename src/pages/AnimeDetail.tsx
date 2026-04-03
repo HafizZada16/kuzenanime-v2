@@ -34,7 +34,7 @@ const AnimeDetail = () => {
         if (json.status === 'success' && json.data?.data) {
           const d = json.data.data;
           const detailed: DetailedAnime = {
-            id: d.id,
+            id: d.slug || d.id,
             title: d.title,
             thumbnail: d.image_url,
             banner: d.image_url,
@@ -58,10 +58,10 @@ const AnimeDetail = () => {
               title: ep.title_indonesian || `Episode ${ep.number}`,
               episode: ep.number?.toString(),
               date: ep.date_created ? new Date(ep.date_created).toLocaleDateString() : 'Recently',
-              slug: ep.id
+              slug: ep.slug || ep.id
             })) || [],
             recommended: d.recommendations?.map((r: any) => ({
-                animeId: r.id,
+                animeId: r.slug || r.id,
                 title: r.title,
                 poster: r.image_url
             })) || [],
@@ -173,12 +173,12 @@ const AnimeDetail = () => {
           </section>
 
           {/* Episode List */}
-          <section className="space-y-6">
-             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                   <span className="w-1 h-5 bg-(--primary) rounded-full"></span>
-                   Daftar Episode
-                </h2>
+           <section className="space-y-6">
+              <div className="flex items-center justify-between">
+                 <h2 className="text-xl font-bold flex items-center gap-2">
+                    <span className="w-1 h-5 bg-(--primary) rounded-full"></span>
+                    Daftar Episode
+                 </h2>
                 <button 
                    onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
                    className="text-sm text-white/40 hover:text-(--primary) flex items-center gap-2"

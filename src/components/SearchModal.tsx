@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faXmark, faPlay, faClock, faStar } from '@fortawesome/free-solid-svg-icons';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
-import { authenticatedFetch } from '../utils/api';
+import { authenticatedFetch, mapAnimeData } from '../utils/api';
 import { Anime } from '../types';
 
 interface SearchModalProps {
@@ -63,7 +63,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
           const res = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/search?q=${encodeURIComponent(query)}&page=1`);
           const json = await res.json();
           if (json.status === 'success' && json.data?.data) {
-            setResults(json.data.data.slice(0, 8)); // Limit to top 8
+            setResults(json.data.data.slice(0, 8).map((item: any) => mapAnimeData(item))); // Limit to top 8
           }
         } catch (err) {
           console.error(err);
@@ -136,8 +136,8 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                     selectedIndex === index ? 'bg-[var(--primary)]/10 border border-[var(--primary)]/20' : 'bg-transparent border border-transparent'
                   }`}
                 >
-                  <div className="w-12 h-16 rounded-lg overflow-hidden shrink-0 bg-white/5 border border-white/10">
-                    <img src={anime.image_url || anime.thumbnail} className="w-full h-full object-cover" alt="" />
+                   <div className="w-12 h-16 rounded-lg overflow-hidden shrink-0 bg-white/5 border border-white/10">
+                    <img src={anime.thumbnail} className="w-full h-full object-cover" alt="" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className={`text-sm font-bold truncate ${selectedIndex === index ? 'text-[var(--primary)]' : 'text-white/90'}`}>
@@ -150,7 +150,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                        </span>
                        <span className="text-[10px] text-white/40 flex items-center gap-1 font-bold italic uppercase tracking-tighter">
                           <FontAwesomeIcon icon={faClock} />
-                          {anime.latest_episode ? `EP ${anime.latest_episode}` : '??'}
+                          {anime.episode}
                        </span>
                     </div>
                   </div>

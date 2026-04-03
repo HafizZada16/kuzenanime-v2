@@ -29,7 +29,7 @@ import FavoritesPage from './pages/FavoritesPage';
 import AuthorPage from './pages/AuthorPage';
 import ScrollToTop from './utils/ScrollToTop';
 import { API_BASE_URL, ANIMEPLAY_API_BASE_URL } from './constants';
-import { authenticatedFetch } from './utils/api';
+import { authenticatedFetch, mapAnimeData } from './utils/api';
 
 export default function App() {
   const [latestEpisodes, setLatestEpisodes] = useState<Anime[]>([]);
@@ -40,20 +40,7 @@ export default function App() {
 
   const mapApiData = (data: any[]): Anime[] => {
     if (!Array.isArray(data)) return [];
-    return data.map((item: any) => ({
-      id: item.id,
-      title: item.title,
-      thumbnail: item.thumbnail || item.image_url || '',
-      banner: item.banner || item.thumbnail || item.image_url || '',
-      episode: item.episode ? `EP ${item.episode}` : '??',
-      status: item.status || 'ONGOING',
-      year: item.year || new Date().getFullYear(),
-      rating: item.rating ? parseFloat(item.rating) : 0,
-      genre: item.genre || ['Anime'], 
-      synopsis: item.synopsis || `Watch ${item.title} on KuzenAnime V2.`,
-      likes: '0',
-      type: item.type
-    }));
+    return data.map((item: any) => mapAnimeData(item));
   };
 
   useEffect(() => {

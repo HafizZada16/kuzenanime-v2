@@ -139,7 +139,7 @@ const WatchPage = () => {
           if (detailJson.status === 'success' && detailJson.data?.data) {
             const d = detailJson.data.data;
             const detailed: DetailedAnime = {
-              id: d.id,
+              id: d.slug || d.id,
               title: d.title,
               thumbnail: d.image_url,
               banner: d.image_url,
@@ -163,7 +163,7 @@ const WatchPage = () => {
                 title: ep.title_indonesian || `Episode ${ep.number}`,
                 episode: ep.number?.toString(),
                 date: ep.date_created ? new Date(ep.date_created).toLocaleDateString() : 'Recently',
-                slug: ep.id
+                slug: ep.slug || ep.id
               })) || [], 'oldest'),
             };
             setAnimeDetail(detailed);

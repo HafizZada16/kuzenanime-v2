@@ -3,7 +3,7 @@ import { Anime } from '../types';
 import Loader from '../components/Loader';
 import AnimeCard from '../components/AnimeCard';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
-import { authenticatedFetch } from '../utils/api';
+import { authenticatedFetch, mapAnimeData } from '../utils/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
@@ -15,19 +15,7 @@ const DonghuaPage = () => {
 
   const mapApiData = (data: any[]): Anime[] => {
     if (!Array.isArray(data)) return [];
-    return data.map((item: any) => ({
-      id: item.id,
-      title: item.title,
-      thumbnail: item.image_url || '',
-      banner: item.image_url || '',
-      episode: item.latest_episode ? `EP ${item.latest_episode}` : '??',
-      status: 'ONGOING',
-      year: item.date_created ? new Date(item.date_created).getFullYear() : 2026,
-      rating: item.rating ? parseFloat(item.rating) : 0,
-      genre: ['Donghua'],
-      synopsis: `Added: ${item.date_created ? new Date(item.date_created).toLocaleDateString() : 'Recently'}.`,
-      likes: `${Math.floor(Math.random() * 50) + 1}K`
-    }));
+    return data.map((item: any) => mapAnimeData(item));
   };
 
   useEffect(() => {
