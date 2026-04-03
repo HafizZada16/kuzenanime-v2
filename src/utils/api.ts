@@ -67,8 +67,11 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
  * Standardized mapping for Anime objects from various API responses
  */
 export const mapAnimeData = (item: any): Anime => {
-  const id = item.slug || item.id || '';
+  // Use the most appropriate slug for the primary ID (navigation target)
+  // Backend fix: Prioritize anime_id or series_slug if available to link to the detail page
+  const id = item.anime_id || item.anime_slug || item.series_slug || item.slug || item.id || '';
   const episode = item.latest_episode || item.episode || item.ep || '';
+  
   const isMovie = item.type?.toLowerCase().includes('movie') || 
                   item.title?.toLowerCase().includes('movie') ||
                   (item.type?.toLowerCase() === 'series' && !episode);
