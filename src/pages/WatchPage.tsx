@@ -7,7 +7,7 @@ import VideoPlayer from '../components/VideoPlayer';
 import { DetailedAnime } from '../types';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
 import { authenticatedFetch } from '../utils/api';
-import { sortEpisodes } from '../utils/episode';
+import { sortEpisodes, formatEpisodeTitle } from '../utils/episode';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay } from '@fortawesome/free-solid-svg-icons';
 import SEO from '../components/SEO';
@@ -255,7 +255,7 @@ const WatchPage = () => {
                   
                   <div className="space-y-2">
                     <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Episode Selanjutnya</p>
-                    <h3 className="text-xl font-bold text-white line-clamp-2">{next.title}</h3>
+                    <h3 className="text-xl font-bold text-white line-clamp-2">{formatEpisodeTitle(next.title, animeDetail?.title || '', next.episode)}</h3>
                   </div>
 
                   <div className="flex gap-3 pt-4">
@@ -331,7 +331,7 @@ const WatchPage = () => {
           <div className="bg-white/5 rounded-2xl p-6 md:p-8 space-y-6">
             <div>
                <h1 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight">
-                 {currentEpisode?.title}
+                 {formatEpisodeTitle(currentEpisode?.title || '', animeDetail?.title || '', currentEpisode?.episode || '') || currentEpisode?.title}
                </h1>
                <div className="flex items-center gap-3 text-white/40 text-xs">
                   <span className="text-yellow-400 font-bold">★ {animeDetail?.rating}</span>
@@ -383,7 +383,7 @@ const WatchPage = () => {
                       }`}
                   >
                       <span className="w-8 h-8 shrink-0 flex items-center justify-center rounded bg-white/5 text-[10px] font-bold">{ep.episode}</span>
-                      <span className="text-xs truncate font-medium">{ep.title.replace(animeDetail.title, '').trim() || `Episode ${ep.episode}`}</span>
+                      <span className="text-xs truncate font-medium">{formatEpisodeTitle(ep.title, animeDetail.title, ep.episode)}</span>
                   </button>
                   ))}
               </div>

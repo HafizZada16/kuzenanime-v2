@@ -7,7 +7,7 @@ import Badge from '../components/Badge';
 import { useFavorites } from '../hooks/useFavorites';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
 import { authenticatedFetch } from '../utils/api';
-import { sortEpisodes } from '../utils/episode';
+import { sortEpisodes, formatEpisodeTitle } from '../utils/episode';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faPlay, faBookmark, faInfoCircle, faCalendar, faFilm, faUsers, faLayerGroup, faMagnifyingGlass, faHeart, faHeartCircleCheck, faHeartCirclePlus } from '@fortawesome/free-solid-svg-icons';
 import SEO from '../components/SEO';
@@ -200,7 +200,7 @@ const AnimeDetail = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-sm font-medium text-white/90 truncate group-hover:text-(--primary) transition-colors">
-                        {ep.title.replace(anime.title, '').trim() || `Episode ${ep.episode}`}
+                        {formatEpisodeTitle(ep.title, anime.title, ep.episode)}
                       </h4>
                       <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wider">{ep.date}</p>
                     </div>
