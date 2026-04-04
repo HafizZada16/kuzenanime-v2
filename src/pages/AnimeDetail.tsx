@@ -199,8 +199,8 @@ const AnimeDetail = () => {
                       {ep.episode}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-white/90 truncate group-hover:text-(--primary) transition-colors">
-                        {ep.title}
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-white/90 truncate group-hover:text-(--primary) transition-colors">
+                        Episode {ep.episode}
                       </h4>
                       <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wider">{ep.date}</p>
                     </div>
