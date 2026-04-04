@@ -7,7 +7,7 @@ import VideoPlayer from '../components/VideoPlayer';
 import { DetailedAnime } from '../types';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
 import { authenticatedFetch } from '../utils/api';
-import { sortEpisodes, formatEpisodeTitle } from '../utils/episode';
+import { sortEpisodes } from '../utils/episode';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay } from '@fortawesome/free-solid-svg-icons';
 import SEO from '../components/SEO';
@@ -16,8 +16,23 @@ interface StreamData {
   id: string;
   quality: string;
   streaming_url: string;
+  ads?: string;
+}
+
+interface ServerData {
+  name: string;
   download_url: string;
-  file_size: number;
+}
+
+interface QualityGroup {
+  quality: string;
+  size: string;
+  servers: ServerData[];
+}
+
+interface DownloadFormat {
+  format: string;
+  qualities: QualityGroup[];
 }
 
 const WatchPage = () => {
@@ -25,6 +40,7 @@ const WatchPage = () => {
   const episodeSlug = slug && !epSlugParam ? slug : epSlugParam; // Handle /episode/:slug case
   const navigate = useNavigate();
   const [streams, setStreams] = useState<StreamData[]>([]);
+  const [downloads, setDownloads] = useState<DownloadFormat[]>([]);
   const [animeDetail, setAnimeDetail] = useState<DetailedAnime | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchingEpisode, setFetchingEpisode] = useState(false);
@@ -112,10 +128,45 @@ const WatchPage = () => {
         const epRes = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/watch/${episodeSlug}`);
         const epJson = await epRes.json();
         
-        if (epJson.status === 'success' && epJson.data?.data) {
-          const streamList = epJson.data.data;
-          const foundSeriesSlug = epJson.data.seriesSlug;
-          setStreams(streamList);
+        if (epJson.status === 'success' && epJson.data) {
+          const watchData = epJson.data;
+          const streamList = watchData.streams || [];
+          const foundSeriesSlug = watchData.series_slug || watchData.seriesSlug;
+          const episodeList = watchData.episodes || [];
+          
+          // Group flat downloads by format
+          const rawDownloads = watchData.downloads || [];
+          const groupedDownloads: DownloadFormat[] = rawDownloads.reduce((acc: DownloadFormat[], item: any) => {
+            let formatGroup = acc.find(f => f.format === item.format);
+            if (!formatGroup) {
+              formatGroup = { format: item.format, qualities: [] };
+              acc.push(formatGroup);
+            }
+            formatGroup.qualities.push({
+              quality: item.quality || 'Unknown',
+              size: item.size || 'N/A',
+              servers: (item.servers || []).map((s: any) => ({
+                name: s.server || s.name || 'Server',
+                download_url: s.download_url
+              }))
+            });
+            return acc;
+          }, []);
+
+          // Add download servers as extra stream options (iframes/direct)
+          const downloadStreams: StreamData[] = rawDownloads.flatMap((dl: any) => 
+            (dl.servers || []).map((s: any, sIdx: number) => ({
+              id: `dl-${dl.quality}-${s.server || sIdx}`,
+              quality: `${dl.quality} - ${s.server || 'Mirror'}`,
+              streaming_url: s.download_url,
+              ads: 'External'
+            }))
+          );
+
+          const allStreams = [...streamList, ...downloadStreams];
+
+          setStreams(allStreams);
+          setDownloads(groupedDownloads);
           
           // Redirect to proper watch URL if we only have episodeSlug
           if (!slug && foundSeriesSlug) {
@@ -127,8 +178,51 @@ const WatchPage = () => {
 
           // Try to match saved preferred quality
           const savedQuality = localStorage.getItem('preferred_quality');
-          const matchedStream = streamList.find((s: any) => s.quality === savedQuality) || streamList[0];
+          const matchedStream = allStreams.find((s: StreamData) => s.quality === savedQuality) || allStreams[0];
           setCurrentStream(matchedStream || null);
+
+          // Pre-populate or update animeDetail with data from watch endpoint if missing
+          if (episodeList.length > 0) {
+            setAnimeDetail(prev => {
+              const mappedEpisodes = sortEpisodes(episodeList.map((ep: any) => ({
+                title: ep.title_indonesian || `Episode ${ep.number}`,
+                episode: ep.number?.toString(),
+                date: ep.date_created || 'Recently',
+                slug: ep.slug
+              })), 'oldest');
+
+              if (!prev) {
+                return {
+                  id: currentSeriesSlug || '',
+                  title: watchData.anime_title || 'Loading...',
+                  thumbnail: '',
+                  banner: '',
+                  episode: watchData.episode_title || '?',
+                  status: watchData.status?.toUpperCase() === 'COMPLETED' ? 'COMPLETED' : 'ONGOING',
+                  year: new Date().getFullYear(),
+                  rating: 0,
+                  genre: [],
+                  synopsis: '',
+                  info: {
+                    tipe: watchData.type,
+                    duration: watchData.duration,
+                    studio: watchData.studio,
+                  },
+                  episodes: mappedEpisodes
+                } as DetailedAnime;
+              }
+              return {
+                ...prev,
+                episodes: mappedEpisodes,
+                info: {
+                  ...prev.info,
+                  tipe: prev.info?.tipe || watchData.type,
+                  duration: prev.info?.duration || watchData.duration,
+                  studio: prev.info?.studio || watchData.studio,
+                }
+              };
+            });
+          }
         }
 
         // 2. Fetch Detail if missing or mismatched
@@ -190,8 +284,8 @@ const WatchPage = () => {
     <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-8 pb-20">
       {animeDetail && currentEpisode && (
         <SEO 
-          title={`Nonton ${animeDetail.title} ${currentEpisode.title}`}
-          description={`Streaming ${animeDetail.title} ${currentEpisode.title} Subtitle Indonesia gratis dengan kualitas HD di KuzenAnime V2.`}
+          title={`Nonton ${animeDetail.title || 'Anime'} ${currentEpisode.title}`}
+          description={`Streaming ${animeDetail.title || 'Anime'} ${currentEpisode.title} Subtitle Indonesia gratis dengan kualitas HD di KuzenAnime V2.`}
           image={animeDetail.banner || animeDetail.thumbnail}
           type="video.episode"
         />
@@ -203,7 +297,7 @@ const WatchPage = () => {
             <VideoPlayer 
               episodeId={episodeSlug}
               src={currentStream?.streaming_url} 
-              title={animeDetail?.title}
+              title={currentEpisode?.title}
               qualities={streams}
               currentQuality={currentStream?.quality}
               onQualityChange={(stream) => {
@@ -245,7 +339,7 @@ const WatchPage = () => {
                         fill="transparent"
                         strokeDasharray={251.2}
                         strokeDashoffset={251.2 - (251.2 * countdown) / 5}
-                        className="text-[var(--primary)] transition-all duration-1000 linear"
+                        className="text-(--primary) transition-all duration-1000 linear"
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -255,7 +349,7 @@ const WatchPage = () => {
                   
                   <div className="space-y-2">
                     <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Episode Selanjutnya</p>
-                    <h3 className="text-xl font-bold text-white line-clamp-2">{formatEpisodeTitle(next.title, animeDetail?.title || '', next.episode)}</h3>
+                    <h3 className="text-xl font-bold text-white line-clamp-2">{next.title}</h3>
                   </div>
 
                   <div className="flex gap-3 pt-4">
@@ -312,7 +406,7 @@ const WatchPage = () => {
                 <span className="text-xs font-bold text-white/40 uppercase tracking-widest group-hover:text-white/60 transition-colors">Auto Next</span>
                 <div 
                   onClick={() => setIsAutoNext(!isAutoNext)}
-                  className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${isAutoNext ? 'bg-[var(--primary)]' : 'bg-white/10'}`}
+                  className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${isAutoNext ? 'bg-(--primary)' : 'bg-white/10'}`}
                 >
                   <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform duration-300 ${isAutoNext ? 'translate-x-5' : 'translate-x-0'}`}></div>
                 </div>
@@ -328,21 +422,49 @@ const WatchPage = () => {
           </div>
 
           {/* Metadata Section */}
-          <div className="bg-white/5 rounded-2xl p-6 md:p-8 space-y-6">
-            <div>
-               <h1 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight">
-                 {formatEpisodeTitle(currentEpisode?.title || '', animeDetail?.title || '', currentEpisode?.episode || '') || currentEpisode?.title}
-               </h1>
-               <div className="flex items-center gap-3 text-white/40 text-xs">
-                  <span className="text-yellow-400 font-bold">★ {animeDetail?.rating}</span>
-                  <span>•</span>
-                  <span>{animeDetail?.year}</span>
-                  <span>•</span>
-                  <span>{currentEpisode?.date}</span>
-               </div>
-            </div>
+            <div className="bg-white/5 rounded-2xl p-6 md:p-8 space-y-6">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/5 pb-6">
+                <div className="space-y-2">
+                  <h1 className="text-xl md:text-2xl font-bold text-white leading-tight">
+                    {currentEpisode?.title}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-3 text-white/40 text-xs font-bold uppercase tracking-wider">
+                    <span className="text-yellow-400">★ {animeDetail?.rating || '0.0'}</span>
+                    <span>•</span>
+                    <span>{animeDetail?.year || '????'}</span>
+                    <span>•</span>
+                    <span className="text-(--primary)">{animeDetail?.info?.tipe || 'TV'}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 text-white/20 text-[10px] font-bold uppercase tracking-widest">
+                   <span>{currentEpisode?.date}</span>
+                </div>
+              </div>
 
-            <div className="space-y-4 pt-6 border-t border-white/5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-2">
+                <div className="space-y-1">
+                  <p className="text-[10px] text-white/30 uppercase font-black tracking-tighter">Status</p>
+                  <p className="text-xs font-bold text-white/80">{animeDetail?.status || 'N/A'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] text-white/30 uppercase font-black tracking-tighter">Durasi</p>
+                  <p className="text-xs font-bold text-white/80">{animeDetail?.info?.duration || 'N/A'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] text-white/30 uppercase font-black tracking-tighter">Studio</p>
+                  <p className="text-xs font-bold text-white/80 transition-colors hover:text-(--primary) cursor-default">{animeDetail?.info?.studio || 'N/A'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] text-white/30 uppercase font-black tracking-tighter">Genre</p>
+                  <div className="flex flex-wrap gap-1">
+                    {animeDetail?.genre?.slice(0, 2).map((g, i) => (
+                      <span key={i} className="text-[10px] font-bold text-white/60">{g}{i < 1 && animeDetail.genre.length > 1 ? ',' : ''}</span>
+                    )) || <span className="text-[10px] font-bold text-white/40">N/A</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-6 border-t border-white/5">
               <h3 className="font-bold text-sm text-white/60 uppercase tracking-wider">Kualitas Video</h3>
               <div className="flex flex-wrap gap-2">
                 {streams.map((stream) => (
@@ -351,11 +473,11 @@ const WatchPage = () => {
                     onClick={() => setCurrentStream(stream)}
                     className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                       currentStream?.id === stream.id 
-                      ? 'bg-[var(--primary)] text-white' 
+                      ? 'bg-(--primary) text-white' 
                       : 'bg-white/5 text-white/60 hover:bg-white/10'
                     }`}
                   >
-                    {stream.quality} <span className="text-[9px] opacity-40 ml-1">({stream.file_size}MB)</span>
+                    {stream.quality}
                   </button>
                 ))}
               </div>
@@ -376,42 +498,73 @@ const WatchPage = () => {
                       key={idx}
                       ref={ep.slug === episodeSlug ? activeEpisodeRef : null}
                       onClick={() => navigate(`/watch/${slug}/${ep.slug}`)}
-                      className={`w-full text-left p-3 flex items-center gap-3 transition-colors ${
+                      className={`w-full text-left p-4 flex items-center justify-between gap-4 transition-all group ${
                       ep.slug === episodeSlug 
-                      ? 'bg-[var(--primary)]/10 text-[var(--primary)]' 
+                      ? 'bg-(--primary)/10 text-(--primary)' 
                       : 'text-white/60 hover:bg-white/5 hover:text-white'
                       }`}
                   >
-                      <span className="w-8 h-8 shrink-0 flex items-center justify-center rounded bg-white/5 text-[10px] font-bold">{ep.episode}</span>
-                      <span className="text-xs truncate font-medium">{formatEpisodeTitle(ep.title, animeDetail.title, ep.episode)}</span>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-colors ${
+                          ep.slug === episodeSlug ? 'bg-(--primary) text-white' : 'bg-white/5 text-white/40 group-hover:bg-white/10 group-hover:text-white'
+                        }`}>
+                          {ep.episode}
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Episode {ep.episode}</span>
+                      </div>
+                      
+                      {ep.slug === episodeSlug && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-(--primary) shadow-[0_0_8px_var(--primary)]"></div>
+                      )}
                   </button>
                   ))}
               </div>
            </div>
 
            {/* Download Section */}
-           <div className="bg-white/5 rounded-2xl p-6 border border-white/5 space-y-4">
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/5 space-y-6">
               <h3 className="font-bold text-sm">Unduh Video</h3>
-              <div className="space-y-2">
-                {streams.map((stream) => (
-                  <a 
-                    key={stream.id}
-                    href={stream.download_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between bg-white/5 p-3 rounded-xl hover:bg-white/10 transition-all group"
-                  >
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-bold text-white/80">{stream.quality}</span>
-                      <span className="text-[10px] text-white/40">{stream.file_size}MB</span>
+              <div className="space-y-6">
+                {downloads.map((format, fIdx) => (
+                  <div key={fIdx} className="space-y-3">
+                    <div className="flex items-center gap-2">
+                       <span className="px-2 py-0.5 rounded bg-(--primary)/20 text-(--primary) text-[10px] font-black uppercase tracking-wider">{format.format}</span>
+                       <div className="h-px flex-1 bg-white/5"></div>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center group-hover:bg-[var(--primary)] group-hover:text-white transition-all">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <div className="grid grid-cols-1 gap-2">
+                      {format.qualities?.map((q, qIdx) => (
+                        <div key={qIdx} className="bg-white/5 rounded-xl overflow-hidden border border-white/5 hover:border-white/10 transition-colors">
+                           <div className="flex items-center justify-between px-4 py-2 bg-white/5">
+                              <span className="text-xs font-bold text-white/90">{q.quality}</span>
+                              <span className="text-[10px] text-white/40 font-medium">{q.size}</span>
+                           </div>
+                           <div className="p-2 flex flex-wrap gap-2">
+                              {q.servers?.map((server, sIdx) => (
+                                <a 
+                                  key={sIdx}
+                                  href={server.download_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex-1 min-w-[80px] flex items-center justify-center gap-2 bg-white/5 py-2 px-3 rounded-lg hover:bg-(--primary) hover:text-white transition-all group"
+                                >
+                                  <span className="text-[10px] font-bold truncate">{server.name}</span>
+                                  <svg className="w-3 h-3 opacity-40 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                </a>
+                              ))}
+                           </div>
+                        </div>
+                      ))}
                     </div>
-                  </a>
+                  </div>
                 ))}
+
+                {downloads.length === 0 && (
+                  <div className="text-center py-4">
+                    <span className="text-xs text-white/20 italic">Tidak ada link unduhan tersedia.</span>
+                  </div>
+                )}
               </div>
-           </div>
+            </div>
         </div>
       </div>
     </div>

@@ -16,8 +16,7 @@ interface StreamData {
   id: string;
   quality: string;
   streaming_url: string;
-  download_url: string;
-  file_size: number;
+  ads?: string;
 }
 
 interface VideoPlayerProps {
@@ -273,18 +272,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       {/* Center Play Button (Large) */}
       <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${!isPlaying || showControls ? 'opacity-100' : 'opacity-0'}`}>
-        <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="w-16 h-16 md:w-20 md:h-20 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white pointer-events-auto hover:bg-[var(--primary)] hover:scale-110 transition-all">
+        <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="w-16 h-16 md:w-20 md:h-20 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white pointer-events-auto hover:bg-(--primary) hover:scale-110 transition-all">
           <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} size="2x" className={!isPlaying ? "ml-1" : ""} />
         </button>
       </div>
 
       {/* Modern Controls Overlay */}
-      <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent px-4 md:px-8 pb-4 md:pb-6 transition-all duration-500 z-30 ${showControls ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+      <div className={`absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/20 to-transparent px-4 md:px-8 pb-4 md:pb-6 transition-all duration-500 z-30 ${showControls ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
         
         {/* Progress Bar Container */}
         <div className="relative w-full group/progress mb-4">
           <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-1 bg-white/20 rounded-full overflow-hidden">
-             <div className="h-full bg-[var(--primary)] transition-all duration-100" style={{ width: `${progress}%` }}></div>
+             <div className="h-full bg-(--primary) transition-all duration-100" style={{ width: `${progress}%` }}></div>
           </div>
           <input
             type="range"
@@ -292,13 +291,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             max="100"
             value={progress || 0}
             onChange={handleProgressChange}
-            className="relative w-full h-4 bg-transparent appearance-none cursor-pointer outline-none opacity-0 group-hover/progress:opacity-100 transition-opacity accent-[var(--primary)]"
+            className="relative w-full h-4 bg-transparent appearance-none cursor-pointer outline-none opacity-0 group-hover/progress:opacity-100 transition-opacity accent-(--primary)"
           />
         </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 md:gap-6">
-            <button onClick={togglePlay} className="text-white hover:text-[var(--primary)] transition-colors">
+            <button onClick={togglePlay} className="text-white hover:text-(--primary) transition-colors">
               <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} size="lg" />
             </button>
             
@@ -329,7 +328,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               {showQualityMenu && qualities.length > 0 && (
                 <div className="absolute bottom-full right-0 mb-4 bg-[#1a1a1a] rounded-xl border border-white/10 shadow-2xl min-w-[120px] py-2">
                   {qualities.map((q) => (
-                    <button key={q.id} onClick={() => { if (onQualityChange) onQualityChange(q); setShowQualityMenu(false); }} className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-white/5 ${currentQuality === q.quality ? 'text-[var(--primary)]' : 'text-white/60'}`}>
+                    <button key={q.id} onClick={() => { if (onQualityChange) onQualityChange(q); setShowQualityMenu(false); }} className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-white/5 ${currentQuality === q.quality ? 'text-(--primary)' : 'text-white/60'}`}>
                       {q.quality}
                     </button>
                   ))}

@@ -32,24 +32,3 @@ export const sortEpisodes = (episodes: DetailedEpisode[], order: 'newest' | 'old
     return order === 'newest' ? numB - numA : numA - numB;
   });
 };
-
-/**
- * Formats an episode title by removing the anime title prefix and ensuring a meaningful result.
- */
-export const formatEpisodeTitle = (epTitle: string, animeTitle: string, epNumber: string): string => {
-  if (!epTitle) return `Episode ${epNumber}`;
-  
-  // Remove the anime title from the episode title
-  let clean = epTitle.replace(animeTitle, '').trim();
-  
-  // Remove common starting separators like "-", ":", etc.
-  clean = clean.replace(/^[-\s:|]+/, '').trim();
-  
-  // If the result is just a number or empty, fallback to "Episode [number]"
-  // This prevents cases where the residual title is just "1", "2", etc.
-  if (!clean || /^\d+$/.test(clean)) {
-    return `Episode ${epNumber}`;
-  }
-  
-  return clean;
-};
