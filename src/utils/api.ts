@@ -67,27 +67,52 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
  * Standardized mapping for Anime objects from various API responses
  */
 export const mapAnimeData = (item: any): Anime => {
-  // Use the slug/id provided by the API. Assumes backend provides the correct 
-  // navigation target (series slug) based on the latest backend fix.
-  const id = item.anime_id || item.anime_slug || item.series_slug || item.slug || item.id || '';
-  const episode = item.latest_episode || item.episode || item.ep || '';
+  // Use the slug/id provided by the API.
+  const id = item.seriesSlug || item.anime_id || item.anime_slug || item.series_slug || item.slug || item.id || '';
+  const episode = item.latest_episode || item.episode || item.episode_title || item.ep || '';
   
   const isMovie = item.type?.toLowerCase().includes('movie') || 
-                  item.title?.toLowerCase().includes('movie') ||
+                  (item.title || item.anime_title)?.toLowerCase().includes('movie') ||
                   (item.type?.toLowerCase() === 'series' && !episode);
+  
+  // Parse rating string like "Rating 7.50"
+  let rating = 0;
+  if (typeof item.rating === 'string') {
+    const match = item.rating.match(/(\d+(\.\d+)?)/);
+    if (match) rating = parseFloat(match[0]);
+  } else if (typeof item.rating === 'number') {
+    rating = item.rating;
+  }
+
+  const thumb = item.thumb || item.image_url || item.thumbnail || item.poster || '';
   
   return {
     id: id,
-    title: item.title || 'Untitled',
-    thumbnail: item.image_url || item.thumbnail || item.poster || '',
-    banner: item.image_url || item.thumbnail || item.banner || item.poster || '',
+    title: item.anime_title || item.title || 'Untitled',
+    thumbnail: thumb,
+    banner: item.banner || thumb,
     episode: episode ? (episode.toString().startsWith('EP') ? episode.toString() : `EP ${episode}`) : (isMovie ? 'MOVIE' : '??'),
-    status: item.status || (item.season_status?.toUpperCase() === 'COMPLETED' ? 'COMPLETED' : 'ONGOING'),
+    status: (item.status?.toUpperCase() === 'COMPLETED' || item.status?.toUpperCase() === 'TAMAT') ? 'COMPLETED' : 'ONGOING',
     year: item.year || (item.release_date ? new Date(item.release_date).getFullYear() : new Date().getFullYear()),
-    rating: item.rating ? parseFloat(item.rating) : 0,
-    genre: item.genre || (item.genres?.map((g: any) => g.genre.name)) || ['Anime'],
-    synopsis: item.synopsis || `Watch ${item.title} on KuzenAnime V2.`,
+    rating: rating,
+    genre: item.genre || (item.genres?.map((g: any) => g.name || g.genre?.name)) || ['Anime'],
+    synopsis: item.synopsis || `Watch ${item.anime_title || item.title} on KuzenAnime V2.`,
     likes: item.likes || '0',
     type: item.type
+  };
+};
+
+/**
+ * Standardizes API responses that may use different keys for lists
+ */
+export const normalizeApiResponse = (data: any) => {
+  if (!data) return data;
+  
+  return {
+    ...data,
+    episodeList: data.episodeList || data.episodes || data.episode_list || [],
+    serverList: data.serverList || data.streams || data.server_list || [],
+    downloadList: data.downloadList || data.downloads || data.download_list || [],
+    recommendationList: data.recommendationList || data.recommendations || data.recommended || data.recommended_anime || []
   };
 };

@@ -6,7 +6,7 @@ import Badge from '../components/Badge';
 import VideoPlayer from '../components/VideoPlayer';
 import { DetailedAnime } from '../types';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
-import { authenticatedFetch } from '../utils/api';
+import { authenticatedFetch, normalizeApiResponse } from '../utils/api';
 import { sortEpisodes } from '../utils/episode';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay } from '@fortawesome/free-solid-svg-icons';
@@ -129,13 +129,13 @@ const WatchPage = () => {
         const epJson = await epRes.json();
         
         if (epJson.status === 'success' && epJson.data) {
-          const watchData = epJson.data;
-          const streamList = watchData.streams || [];
+          const watchData = normalizeApiResponse(epJson.data);
+          const streamList = watchData.serverList || [];
           const foundSeriesSlug = watchData.series_slug || watchData.seriesSlug;
-          const episodeList = watchData.episodes || [];
+          const episodeList = watchData.episodeList || [];
           
           // Group flat downloads by format
-          const rawDownloads = watchData.downloads || [];
+          const rawDownloads = watchData.downloadList || [];
           const groupedDownloads: DownloadFormat[] = rawDownloads.reduce((acc: DownloadFormat[], item: any) => {
             let formatGroup = acc.find(f => f.format === item.format);
             if (!formatGroup) {
@@ -185,24 +185,24 @@ const WatchPage = () => {
           if (episodeList.length > 0) {
             setAnimeDetail(prev => {
               const mappedEpisodes = sortEpisodes(episodeList.map((ep: any) => ({
-                title: ep.title_indonesian || `Episode ${ep.number}`,
-                episode: ep.number?.toString(),
-                date: ep.date_created || 'Recently',
-                slug: ep.slug
+                title: ep.title_indonesian || ep.title || `Episode ${ep.number || ep.eps}`,
+                episode: (ep.number || ep.eps)?.toString(),
+                date: ep.date_created || ep.date || 'Recently',
+                slug: ep.slug || ep.id || ep.episodeId
               })), 'oldest');
 
               if (!prev) {
                 return {
                   id: currentSeriesSlug || '',
-                  title: watchData.anime_title || 'Loading...',
-                  thumbnail: '',
-                  banner: '',
+                  title: watchData.anime_title || watchData.title || 'Loading...',
+                  thumbnail: watchData.thumb || watchData.image_url || '',
+                  banner: watchData.banner || watchData.thumb || '',
                   episode: watchData.episode_title || '?',
-                  status: watchData.status?.toUpperCase() === 'COMPLETED' ? 'COMPLETED' : 'ONGOING',
+                  status: (watchData.status?.toUpperCase() === 'COMPLETED' || watchData.status?.toUpperCase() === 'TAMAT') ? 'COMPLETED' : 'ONGOING',
                   year: new Date().getFullYear(),
                   rating: 0,
-                  genre: [],
-                  synopsis: '',
+                  genre: watchData.genres?.map((g: any) => g.name || g.genre?.name) || [],
+                  synopsis: watchData.synopsis || '',
                   info: {
                     tipe: watchData.type,
                     duration: watchData.duration,
@@ -230,36 +230,46 @@ const WatchPage = () => {
           const detailRes = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/detail/${currentSeriesSlug}`);
           const detailJson = await detailRes.json();
 
-          if (detailJson.status === 'success' && detailJson.data?.data) {
-            const d = detailJson.data.data;
+          if (detailJson.status === 'success' && detailJson.data) {
+            const rawDetail = detailJson.data.data || detailJson.data;
+            const d = normalizeApiResponse(rawDetail);
             const detailed: DetailedAnime = {
-              id: d.slug || d.id,
-              title: d.title,
-              thumbnail: d.image_url,
-              banner: d.image_url,
-              episode: d.latest_episode?.toString() || '?',
-              status: d.season_status?.toUpperCase() === 'COMPLETED' ? 'COMPLETED' : 'ONGOING',
-              year: d.release_date ? new Date(d.release_date).getFullYear() : new Date().getFullYear(),
-              rating: d.rating ? parseFloat(d.rating) : 0,
-              genre: d.genres?.map((g: any) => g.genre.name) || [],
+              id: d.seriesSlug || d.slug || d.id,
+              title: d.anime_title || d.title,
+              thumbnail: d.thumb || d.image_url || d.thumbnail || d.poster,
+              banner: d.banner || d.thumb || d.image_url || d.thumbnail || d.poster,
+              episode: d.latest_episode?.toString() || d.episode_title || '?',
+              status: d.season_status?.toUpperCase() === 'COMPLETED' || d.status?.toUpperCase() === 'COMPLETED' || d.status?.toUpperCase() === 'TAMAT' ? 'COMPLETED' : 'ONGOING',
+              year: d.release_date || d.year ? new Date(d.release_date || d.year).getFullYear() : new Date().getFullYear(),
+              rating: 0, // Will parse below
+              genre: d.genres?.map((g: any) => g.name || g.genre?.name) || d.genre || [],
               synopsis: d.synopsis || 'No synopsis available.',
               info: {
-                japanese: d.title_japanese,
+                japanese: d.title_japanese || d.japanese,
                 tipe: d.type,
-                jumlah_episode: d.total_episode,
-                studio: d.studio?.name || 'N/A',
-                score: d.rating,
-                producers: 'N/A',
+                jumlah_episode: d.total_episode || d.episodes_count,
+                studio: d.studio?.name || d.studio || 'N/A',
+                score: d.rating || d.score,
+                producers: d.producers || 'N/A',
                 duration: d.duration,
-                aired: d.release_date ? new Date(d.release_date).toLocaleDateString() : 'N/A',
+                aired: d.release_date || d.aired ? new Date(d.release_date || d.aired).toLocaleDateString() : 'N/A',
               },
-              episodes: sortEpisodes(d.episodes?.map((ep: any) => ({
-                title: ep.title_indonesian || `Episode ${ep.number}`,
-                episode: ep.number?.toString(),
-                date: ep.date_created ? new Date(ep.date_created).toLocaleDateString() : 'Recently',
-                slug: ep.slug || ep.id
+              episodes: sortEpisodes(d.episodeList?.map((ep: any) => ({
+                title: ep.title_indonesian || ep.title || `Episode ${ep.number || ep.eps}`,
+                episode: (ep.number || ep.eps)?.toString(),
+                date: ep.date_created || ep.date ? new Date(ep.date_created || ep.date).toLocaleDateString() : 'Recently',
+                slug: ep.slug || ep.id || ep.episodeId
               })) || [], 'oldest'),
             };
+
+            // Parse rating string
+            if (typeof d.rating === 'string') {
+              const match = d.rating.match(/(\d+(\.\d+)?)/);
+              if (match) detailed.rating = parseFloat(match[0]);
+            } else if (typeof d.rating === 'number') {
+              detailed.rating = d.rating;
+            }
+
             setAnimeDetail(detailed);
           }
         }

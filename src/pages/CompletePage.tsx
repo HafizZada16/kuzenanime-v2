@@ -25,8 +25,8 @@ const CompletePage = () => {
         const res = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/complete?page=${page}`);
         const json = await res.json();
 
-        if (json.status === 'success' && json.data?.data) {
-          const list = json.data.data;
+        if (json.status === 'success' && json.data) {
+          const list = json.data.data || json.data;
           setCompleteList(mapApiData(list));
           setHasNextPage(!!json.data.hasNextPage);
         }

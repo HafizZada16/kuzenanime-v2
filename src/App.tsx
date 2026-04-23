@@ -51,10 +51,11 @@ export default function App() {
         const json = await res.json();
 
         if (json.status === 'success' && json.data) {
-          const latest = json.data.find((d: any) => d.type === 'latest_episodes')?.data || [];
-          const trending = json.data.find((d: any) => d.type === 'trending')?.data || [];
-          const series = json.data.find((d: any) => d.type === 'new_series')?.data || [];
-          const batch = json.data.find((d: any) => d.type === 'latest_batch')?.data || [];
+          const rawData = Array.isArray(json.data) ? json.data : (json.data.data || []);
+          const latest = rawData.find((d: any) => d.type === 'latest_episodes')?.data || [];
+          const trending = rawData.find((d: any) => d.type === 'trending')?.data || [];
+          const series = rawData.find((d: any) => d.type === 'new_series')?.data || [];
+          const batch = rawData.find((d: any) => d.type === 'latest_batch')?.data || [];
           
           setLatestEpisodes(mapApiData(latest));
           setTrendingList(mapApiData(trending));

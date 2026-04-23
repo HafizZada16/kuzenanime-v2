@@ -29,8 +29,8 @@ const SeasonDetailPage = () => {
         const res = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/season/${seasonId}?page=${page}`);
         const json = await res.json();
         
-        if (json.status === 'success' && json.data?.data) {
-          const list = json.data.data;
+        if (json.status === 'success' && json.data) {
+          const list = json.data.data || json.data;
           setAnimeList(mapApiData(list));
           setHasNextPage(!!json.data.hasNextPage);
         }

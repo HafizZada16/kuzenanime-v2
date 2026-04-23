@@ -37,8 +37,8 @@ const MoviesPage = () => {
         const res = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/movies?page=${page}`);
         const json = await res.json();
         
-        if (json.status === 'success' && json.data?.data) {
-          const list = json.data.data;
+        if (json.status === 'success' && json.data) {
+          const list = json.data.data || json.data;
           setMoviesList(mapApiData(list));
           setHasNextPage(!!json.data.hasNextPage);
         }
