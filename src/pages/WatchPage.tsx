@@ -129,7 +129,8 @@ const WatchPage = () => {
         const epJson = await epRes.json();
         
         if (epJson.status === 'success' && epJson.data) {
-          const watchData = normalizeApiResponse(epJson.data);
+          const rawWatchData = epJson.data.data || epJson.data;
+          const watchData = normalizeApiResponse(rawWatchData);
           const streamList = watchData.serverList || [];
           const foundSeriesSlug = watchData.series_slug || watchData.seriesSlug;
           const episodeList = watchData.episodeList || [];
@@ -195,18 +196,18 @@ const WatchPage = () => {
                 return {
                   id: currentSeriesSlug || '',
                   title: watchData.anime_title || watchData.title || 'Loading...',
-                  thumbnail: watchData.thumb || watchData.image_url || '',
-                  banner: watchData.banner || watchData.thumb || '',
+                  thumbnail: watchData.thumb || watchData.image || watchData.image_url || '',
+                  banner: watchData.banner || watchData.thumb || watchData.image || '',
                   episode: watchData.episode_title || '?',
                   status: (watchData.status?.toUpperCase() === 'COMPLETED' || watchData.status?.toUpperCase() === 'TAMAT') ? 'COMPLETED' : 'ONGOING',
                   year: new Date().getFullYear(),
                   rating: 0,
-                  genre: watchData.genres?.map((g: any) => g.name || g.genre?.name) || [],
+                  genre: watchData.genres?.map((g: any) => g.genre?.name || g.name) || [],
                   synopsis: watchData.synopsis || '',
                   info: {
                     tipe: watchData.type,
                     duration: watchData.duration,
-                    studio: watchData.studio,
+                    studio: watchData.studio?.name || watchData.studio,
                   },
                   episodes: mappedEpisodes
                 } as DetailedAnime;

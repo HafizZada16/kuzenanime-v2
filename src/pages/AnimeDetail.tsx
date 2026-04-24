@@ -47,36 +47,24 @@ const AnimeDetail = () => {
                 const json = await res.json();
 
                 if (json.status === "success" && json.data) {
-                    // Handle both {data: {data: ...}} and {data: ...} structures
                     const rawData = json.data.data || json.data;
                     const d = normalizeApiResponse(rawData);
 
                     const detailed: DetailedAnime = {
-                        id: d.slug || d.id,
-                        title: d.title,
-                        thumbnail: d.image_url || d.thumbnail || d.poster,
-                        banner:
-                            d.banner || d.image_url || d.thumbnail || d.poster,
-                        episode: d.latest_episode?.toString() || "?",
+                        id: d.seriesSlug || d.slug || d.id,
+                        title: d.anime_title || d.title,
+                        thumbnail: d.thumb || d.image || d.image_url || d.thumbnail || d.poster,
+                        banner: d.banner || d.thumb || d.image || d.image_url || d.thumbnail || d.poster,
+                        episode: d.latest_episode?.toString() || d.episode_title || "?",
                         status:
-                            d.season_status?.toUpperCase() === "COMPLETED" ||
-                            d.status?.toUpperCase() === "COMPLETED"
+                            d.season_status?.toUpperCase() === "COMPLETED" || d.status?.toUpperCase() === "COMPLETED" || d.status?.toUpperCase() === "TAMAT"
                                 ? "COMPLETED"
                                 : "ONGOING",
-                        year:
-                            d.release_date || d.year
-                                ? new Date(
-                                      d.release_date || d.year,
-                                  ).getFullYear()
-                                : 2026,
-                        rating:
-                            d.rating || d.score
-                                ? parseFloat(d.rating || d.score)
-                                : 0,
-                        genre:
-                            d.genres?.map((g: any) => g.genre.name) ||
-                            d.genre ||
-                            [],
+                        year: d.release_date || d.year
+                            ? new Date(d.release_date || d.year).getFullYear()
+                            : 2026,
+                        rating: 0, // Will parse below
+                        genre: d.genres?.map((g: any) => g.genre?.name || g.name) || d.genre || [],
                         synopsis: d.synopsis || "Tidak ada sinopsis.",
                         info: {
                             japanese: d.title_japanese || d.japanese,
@@ -86,12 +74,9 @@ const AnimeDetail = () => {
                             score: d.rating || d.score,
                             producers: d.producers || "N/A",
                             duration: d.duration,
-                            aired:
-                                d.release_date || d.aired
-                                    ? new Date(
-                                          d.release_date || d.aired,
-                                      ).toLocaleDateString()
-                                    : "N/A",
+                            aired: d.release_date || d.aired
+                                ? new Date(d.release_date || d.aired).toLocaleDateString()
+                                : "N/A",
                         },
                         episodes:
                             d.episodeList?.map((ep: any) => ({
@@ -100,21 +85,28 @@ const AnimeDetail = () => {
                                     ep.title ||
                                     `Episode ${ep.number || ep.eps}`,
                                 episode: (ep.number || ep.eps)?.toString(),
-                                date:
-                                    ep.date_created || ep.date
-                                        ? new Date(
-                                              ep.date_created || ep.date,
-                                          ).toLocaleDateString()
-                                        : "Recently",
+                                date: ep.date_created || ep.date
+                                    ? new Date(
+                                          ep.date_created || ep.date,
+                                      ).toLocaleDateString()
+                                    : "Recently",
                                 slug: ep.slug || ep.id || ep.episodeId,
                             })) || [],
                         recommended:
                             d.recommendationList?.map((r: any) => ({
-                                animeId: r.slug || r.id || r.animeId,
-                                title: r.title,
-                                poster: r.image_url || r.thumbnail || r.poster,
+                                animeId: r.seriesSlug || r.slug || r.id || r.animeId,
+                                title: r.anime_title || r.title,
+                                poster: r.thumb || r.image || r.image_url || r.thumbnail || r.poster,
                             })) || [],
                     };
+
+                    // Parse rating string
+                    if (typeof d.rating === 'string') {
+                        const match = d.rating.match(/(\d+(\.\d+)?)/);
+                        if (match) detailed.rating = parseFloat(match[0]);
+                    } else if (typeof d.rating === 'number') {
+                        detailed.rating = d.rating;
+                    }
 
                     setAnime(detailed);
                 }

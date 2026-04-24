@@ -84,7 +84,7 @@ export const mapAnimeData = (item: any): Anime => {
     rating = item.rating;
   }
 
-  const thumb = item.thumb || item.image_url || item.thumbnail || item.poster || '';
+  const thumb = item.thumb || item.image || item.image_url || item.thumbnail || item.poster || '';
   
   return {
     id: id,
@@ -95,7 +95,7 @@ export const mapAnimeData = (item: any): Anime => {
     status: (item.status?.toUpperCase() === 'COMPLETED' || item.status?.toUpperCase() === 'TAMAT') ? 'COMPLETED' : 'ONGOING',
     year: item.year || (item.release_date ? new Date(item.release_date).getFullYear() : new Date().getFullYear()),
     rating: rating,
-    genre: item.genre || (item.genres?.map((g: any) => g.name || g.genre?.name)) || ['Anime'],
+    genre: item.genre || (item.genres?.map((g: any) => g.genre?.name || g.name)) || ['Anime'],
     synopsis: item.synopsis || `Watch ${item.anime_title || item.title} on KuzenAnime V2.`,
     likes: item.likes || '0',
     type: item.type
