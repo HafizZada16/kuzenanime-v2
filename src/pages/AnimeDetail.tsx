@@ -57,25 +57,25 @@ const AnimeDetail = () => {
                         banner: d.banner || d.thumb || d.image || d.image_url || d.thumbnail || d.poster,
                         episode: d.latest_episode?.toString() || d.episode_title || "?",
                         status:
-                            d.season_status?.toUpperCase() === "COMPLETED" || d.status?.toUpperCase() === "COMPLETED" || d.status?.toUpperCase() === "TAMAT"
+                            d.status?.toUpperCase() === "COMPLETED" || d.status?.toUpperCase() === "TAMAT"
                                 ? "COMPLETED"
                                 : "ONGOING",
                         year: d.release_date || d.year
                             ? new Date(d.release_date || d.year).getFullYear()
                             : 2026,
                         rating: 0, // Will parse below
-                        genre: d.genres?.map((g: any) => g.genre?.name || g.name) || d.genre || [],
+                        genre: [], // Will parse below
                         synopsis: d.synopsis || "Tidak ada sinopsis.",
                         info: {
-                            japanese: d.title_japanese || d.japanese,
+                            japanese: d.japanese,
                             tipe: d.type,
-                            jumlah_episode: d.total_episode || d.episodes_count,
+                            jumlah_episode: d.total_episode,
                             studio: d.studio?.name || d.studio || "N/A",
-                            score: d.rating || d.score,
+                            score: d.score,
                             producers: d.producers || "N/A",
                             duration: d.duration,
-                            aired: d.release_date || d.aired
-                                ? new Date(d.release_date || d.aired).toLocaleDateString()
+                            aired: d.release_date
+                                ? new Date(d.release_date).toLocaleDateString()
                                 : "N/A",
                         },
                         episodes:
@@ -84,12 +84,8 @@ const AnimeDetail = () => {
                                     ep.title_indonesian ||
                                     ep.title ||
                                     `Episode ${ep.number || ep.eps}`,
-                                episode: (ep.number || ep.eps)?.toString(),
-                                date: ep.date_created || ep.date
-                                    ? new Date(
-                                          ep.date_created || ep.date,
-                                      ).toLocaleDateString()
-                                    : "Recently",
+                                episode: (ep.number || ep.eps)?.toString() || '?',
+                                date: ep.date_created || ep.date || "Recently",
                                 slug: ep.slug || ep.id || ep.episodeId,
                             })) || [],
                         recommended:
@@ -101,11 +97,19 @@ const AnimeDetail = () => {
                     };
 
                     // Parse rating string
-                    if (typeof d.rating === 'string') {
-                        const match = d.rating.match(/(\d+(\.\d+)?)/);
+                    const ratingSource = d.score || d.rating || 0;
+                    if (typeof ratingSource === 'string') {
+                        const match = ratingSource.match(/(\d+(\.\d+)?)/);
                         if (match) detailed.rating = parseFloat(match[0]);
-                    } else if (typeof d.rating === 'number') {
-                        detailed.rating = d.rating;
+                    } else {
+                        detailed.rating = Number(ratingSource) || 0;
+                    }
+
+                    // Parse genres (handle array of objects, array of strings, or comma string)
+                    if (Array.isArray(d.genres)) {
+                        detailed.genre = d.genres.map((g: any) => g.name || g.genre?.name || (typeof g === 'string' ? g : ''));
+                    } else if (typeof d.genres === 'string') {
+                        detailed.genre = d.genres.split(',').map(g => g.trim());
                     }
 
                     setAnime(detailed);

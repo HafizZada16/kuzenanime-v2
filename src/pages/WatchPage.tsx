@@ -194,7 +194,7 @@ const WatchPage = () => {
             setAnimeDetail(prev => {
               const mappedEpisodes = sortEpisodes(episodeList.map((ep: any) => ({
                 title: ep.title_indonesian || ep.title || `Episode ${ep.number || ep.eps}`,
-                episode: (ep.number || ep.eps)?.toString(),
+                episode: (ep.number || ep.eps)?.toString() || '?',
                 date: ep.date_created || ep.date || 'Recently',
                 slug: ep.slug || ep.id || ep.episodeId
               })), 'oldest');
@@ -207,14 +207,16 @@ const WatchPage = () => {
                   banner: watchData.banner || watchData.thumb || watchData.image || '',
                   episode: watchData.episode_title || '?',
                   status: (watchData.status?.toUpperCase() === 'COMPLETED' || watchData.status?.toUpperCase() === 'TAMAT') ? 'COMPLETED' : 'ONGOING',
-                  year: new Date().getFullYear(),
-                  rating: 0,
-                  genre: watchData.genres?.map((g: any) => g.genre?.name || g.name) || [],
+                  year: watchData.release_date || watchData.year ? new Date(watchData.release_date || watchData.year).getFullYear() : new Date().getFullYear(),
+                  rating: Number(watchData.score || watchData.rating) || 0,
+                  genre: Array.isArray(watchData.genres) ? watchData.genres.map((g: any) => g.name || g.genre?.name || (typeof g === 'string' ? g : '')) : [],
                   synopsis: watchData.synopsis || '',
                   info: {
+                    japanese: watchData.japanese,
                     tipe: watchData.type,
                     duration: watchData.duration,
                     studio: watchData.studio?.name || watchData.studio,
+                    score: watchData.score || watchData.rating,
                   },
                   episodes: mappedEpisodes
                 } as DetailedAnime;
@@ -227,6 +229,7 @@ const WatchPage = () => {
                   tipe: prev.info?.tipe || watchData.type,
                   duration: prev.info?.duration || watchData.duration,
                   studio: prev.info?.studio || watchData.studio,
+                  japanese: prev.info?.japanese || watchData.japanese,
                 }
               };
             });
@@ -241,41 +244,43 @@ const WatchPage = () => {
           if (detailJson.status === 'success' && detailJson.data) {
             const rawDetail = detailJson.data.data || detailJson.data;
             const d = normalizeApiResponse(rawDetail);
+            
             const detailed: DetailedAnime = {
               id: d.seriesSlug || d.slug || d.id,
               title: d.anime_title || d.title,
               thumbnail: d.thumb || d.image_url || d.thumbnail || d.poster,
               banner: d.banner || d.thumb || d.image_url || d.thumbnail || d.poster,
               episode: d.latest_episode?.toString() || d.episode_title || '?',
-              status: d.season_status?.toUpperCase() === 'COMPLETED' || d.status?.toUpperCase() === 'COMPLETED' || d.status?.toUpperCase() === 'TAMAT' ? 'COMPLETED' : 'ONGOING',
+              status: d.status?.toUpperCase() === 'COMPLETED' || d.status?.toUpperCase() === 'TAMAT' ? 'COMPLETED' : 'ONGOING',
               year: d.release_date || d.year ? new Date(d.release_date || d.year).getFullYear() : new Date().getFullYear(),
-              rating: 0, // Will parse below
-              genre: d.genres?.map((g: any) => g.name || g.genre?.name) || d.genre || [],
+              rating: 0, 
+              genre: Array.isArray(d.genres) ? d.genres.map((g: any) => g.name || g.genre?.name || (typeof g === 'string' ? g : '')) : [],
               synopsis: d.synopsis || 'No synopsis available.',
               info: {
-                japanese: d.title_japanese || d.japanese,
+                japanese: d.japanese,
                 tipe: d.type,
-                jumlah_episode: d.total_episode || d.episodes_count,
+                jumlah_episode: d.total_episode,
                 studio: d.studio?.name || d.studio || 'N/A',
-                score: d.rating || d.score,
+                score: d.score || d.rating,
                 producers: d.producers || 'N/A',
                 duration: d.duration,
-                aired: d.release_date || d.aired ? new Date(d.release_date || d.aired).toLocaleDateString() : 'N/A',
+                aired: d.release_date ? new Date(d.release_date).toLocaleDateString() : 'N/A',
               },
               episodes: sortEpisodes(d.episodeList?.map((ep: any) => ({
                 title: ep.title_indonesian || ep.title || `Episode ${ep.number || ep.eps}`,
-                episode: (ep.number || ep.eps)?.toString(),
+                episode: (ep.number || ep.eps)?.toString() || '?',
                 date: ep.date_created || ep.date ? new Date(ep.date_created || ep.date).toLocaleDateString() : 'Recently',
                 slug: ep.slug || ep.id || ep.episodeId
               })) || [], 'oldest'),
             };
 
             // Parse rating string
-            if (typeof d.rating === 'string') {
-              const match = d.rating.match(/(\d+(\.\d+)?)/);
+            const ratingSource = d.score || d.rating || 0;
+            if (typeof ratingSource === 'string') {
+              const match = ratingSource.match(/(\d+(\.\d+)?)/);
               if (match) detailed.rating = parseFloat(match[0]);
-            } else if (typeof d.rating === 'number') {
-              detailed.rating = d.rating;
+            } else {
+              detailed.rating = Number(ratingSource) || 0;
             }
 
             setAnimeDetail(detailed);

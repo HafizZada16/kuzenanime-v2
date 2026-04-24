@@ -103,16 +103,55 @@ export const mapAnimeData = (item: any): Anime => {
 };
 
 /**
+ * Extract metadata from various source formats (info or metadata objects)
+ */
+export const extractMetadata = (data: any) => {
+  const meta = data.info || data.metadata || data;
+  
+  // Helper to find value by multiple possible keys (case-insensitive)
+  const findVal = (keys: string[]) => {
+    for (const key of keys) {
+      // Direct match
+      if (meta[key] !== undefined) return meta[key];
+      // Case-insensitive match in meta keys
+      const foundKey = Object.keys(meta).find(k => k.toLowerCase() === key.toLowerCase());
+      if (foundKey) return meta[foundKey];
+    }
+    return undefined;
+  };
+
+  return {
+    japanese: findVal(['Japanese', 'Judul Jepang', 'title_japanese', 'japanese']),
+    type: findVal(['Type', 'Tipe', 'type']),
+    status: findVal(['Status', 'status']),
+    total_episode: findVal(['Episodes', 'Total Episode', 'total_episode', 'jumlah_episode', 'episodes_count']),
+    duration: findVal(['Duration', 'Durasi', 'duration']),
+    release_date: findVal(['Released', 'Aired', 'Rilis', 'release_date', 'aired']),
+    studio: findVal(['Studio', 'studio']),
+    score: findVal(['Score', 'Rating', 'Skor', 'score', 'rating']),
+    genres: findVal(['Genres', 'Genre', 'genre', 'genreList'])
+  };
+};
+
+/**
  * Standardizes API responses that may use different keys for lists
  */
 export const normalizeApiResponse = (data: any) => {
   if (!data) return data;
   
-  return {
+  const normalized = {
     ...data,
     episodeList: data.episodeList || data.episodes || data.episode_list || [],
     serverList: data.serverList || data.streams || data.server_list || [],
     downloadList: data.downloadList || data.downloads || data.download_list || [],
     recommendationList: data.recommendationList || data.recommendations || data.recommended || data.recommended_anime || []
+  };
+
+  // Add standardized metadata if missing at top level
+  const meta = extractMetadata(data);
+  return {
+    ...normalized,
+    ...meta, // Spread meta fields to top level for easier access
+    metadata: meta
   };
 };

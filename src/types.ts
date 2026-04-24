@@ -97,14 +97,15 @@ export interface DetailedAnime extends Anime {
     jumlah_episode?: string | number;
     studio?: string;
     musim?: string;
-    score?: string;
+    score?: string | number;
     producers?: string;
     duration?: string;
     aired?: string;
     japanese?: string;
+    status?: string;
+    rating?: string | number;
   };
   episodes: DetailedEpisode[];
-  episodeList?: OtakudesuEpisode[];
   recommended?: any[];
   recommendedAnimeList?: any[];
   batch?: {
