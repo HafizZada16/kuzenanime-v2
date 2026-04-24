@@ -131,12 +131,19 @@ const WatchPage = () => {
         if (epJson.status === 'success' && epJson.data) {
           const rawWatchData = epJson.data.data || epJson.data;
           const watchData = normalizeApiResponse(rawWatchData);
-          const streamList = watchData.serverList || [];
+          const rawStreams = watchData.streams || watchData.serverList || [];
+          const streamList: StreamData[] = rawStreams.map((s: any, idx: number) => ({
+            id: s.id || `server-${idx}`,
+            quality: s.serverName || s.quality || `Server ${idx + 1}`,
+            streaming_url: s.url || s.streaming_url || '',
+            ads: s.ads || ''
+          })).filter((s: StreamData) => s.streaming_url && s.streaming_url !== 'src=');
+
           const foundSeriesSlug = watchData.series_slug || watchData.seriesSlug;
           const episodeList = watchData.episodeList || [];
-          
+
           // Group flat downloads by format
-          const rawDownloads = watchData.downloadList || [];
+          const rawDownloads = watchData.downloads || watchData.downloadList || [];
           const groupedDownloads: DownloadFormat[] = rawDownloads.reduce((acc: DownloadFormat[], item: any) => {
             let formatGroup = acc.find(f => f.format === item.format);
             if (!formatGroup) {
@@ -164,7 +171,7 @@ const WatchPage = () => {
             }))
           );
 
-          const allStreams = [...streamList, ...downloadStreams];
+          const allStreams = [...streamList];
 
           setStreams(allStreams);
           setDownloads(groupedDownloads);
